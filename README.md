@@ -1,7 +1,6 @@
 # Yumu Image Searcher
 
-*Yumu* is a small background software that aims to solve the struggle of having
-to find an image among thousands of images in a folder. It allows locating images
+*Yumu* is a small background software that aims to solve the struggle finding an image among thousands of images in a folder. It allows locating images
 in a more timely manner through an interface that is similar to Discord's emote picker.
 
 ## Build
@@ -29,11 +28,11 @@ the user specified, i.e. it will list all files with a `.jpg`, `.jpeg`,
 
 If a referenced directory content gets modified (i.e adding, removing or renaming
 an image file), it must be reloaded in the directory window for the modifications
-to be taken in account.
+to be taken into account.
 
 ### Search window
 
-The search window is opened and focused when the configured hotkey is pressed.
+The search window allows for a quick search through the referenced images. I's opened and focused when the configured hotkey is pressed.
 The search results are refreshed on each edit in the search bar.
 
 ![Screenshot](/screenshots/screenshot2.PNG)
@@ -45,6 +44,6 @@ a press on the `Enter` key.
 ## Issues
 
 When copied into the clipboard, the images are stored under the .NET
-bitmap format. Pictures looses their transparency, and only the first
+bitmap format. Pictures lose their transparency, and only the first
 frame of a GIF is loaded. Converting the image into a DIB (*Device Independant Bitmap*) format that supports transparency (DIBv5 or *Format17*), as used by web browsers,
 and copying it to the clipboard would fix the transperency issue.
