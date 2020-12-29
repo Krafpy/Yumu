@@ -1,0 +1,6 @@
+.vscode/
+bin/
+obj/
+dirs.dat
+hotkey.hk
+imgs.dat
