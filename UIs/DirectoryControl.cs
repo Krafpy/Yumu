@@ -14,14 +14,18 @@ namespace Yumu
         private const int DIR_MAX_LENGTH = 25;
 
         private DirectoryManager directoryManager;
-        private ReferencedDirectory dir;
+        private ReferencedDirectory attachedDirectory;
         private int order;
+
+        private DBAccessor dbAccessor;
 
         public DirectoryControl(DirectoryManager directoryManager, ReferencedDirectory dir, int order) : base(directoryManager.DirsPanel)
         {
             this.directoryManager = directoryManager;
-            this.dir = dir;
+            this.attachedDirectory = dir;
             this.order = order;
+
+            dbAccessor = this.directoryManager.dbAccessor;
 
             InitializeComponents();
         }
@@ -38,9 +42,9 @@ namespace Yumu
             Label btnTitle = directoryManager.BtnLabel;
 
             // Limit numbers of characters in the directory display name 
-            string displayName = dir.Name;
+            string displayName = attachedDirectory.Name;
             if(displayName.Length > DIR_MAX_LENGTH)
-                displayName = dir.Name.Substring(0, DIR_MAX_LENGTH) + "...";
+                displayName = attachedDirectory.Name.Substring(0, DIR_MAX_LENGTH) + "...";
 
             // Directory name
             Label dirLab = new Label(){
@@ -61,12 +65,12 @@ namespace Yumu
 
             // Image count label
             Label imgLab = new Label(){
-                Text = dir.ImageCount.ToString(),
+                Text = attachedDirectory.ImageCount.ToString(),
                 Font = new Font(Window.FONT_NAME, 10),
                 AutoSize = true,
                 TextAlign = ContentAlignment.MiddleCenter
             };
-            imgLab.ForeColor = dir.ImageCount > 0 ? Color.Black : Color.Red;
+            imgLab.ForeColor = attachedDirectory.ImageCount > 0 ? Color.Black : Color.Red;
             x = imgTitle.Location.X + imgTitle.PreferredWidth /2 - imgLab.PreferredWidth / 2;
             y = ROW_HEIGHT / 2 - imgLab.Height / 2;
             imgLab.Location = new Point(x, y);
@@ -125,24 +129,20 @@ namespace Yumu
 
         private void OnDelBtnClick(object sender, EventArgs e)
         {
-            dir.DerefrenceContainedImages();
-            dir.RemoveFromDB();
-            
+            dbAccessor.RemoveReferencedDirectory(attachedDirectory.Id);
             directoryManager.BuildDirectoryList();
         }
 
         private void OnRelBtnClick(object sender, EventArgs e)
         {
-            dir.DerefrenceContainedImages();
-            dir.ReferenceContainedImages();
-            dir.UpdateInDB();
-
+            dbAccessor.UpdateReferencedDirectory(attachedDirectory.Id);
             directoryManager.BuildDirectoryList();
         }
 
         private void OnClick(object sender, EventArgs e)
         {
-            ProcessStartInfo startInfo = new ProcessStartInfo("explorer.exe", dir.FullPath);
+            ProcessStartInfo startInfo = 
+            new ProcessStartInfo("explorer.exe", attachedDirectory.FullPath);
             Process.Start(startInfo);
         }
     }

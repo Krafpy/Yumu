@@ -12,13 +12,7 @@ namespace Yumu
         private const int X_MARGIN = 10;
         private const int Y_MARGIN = 10;
 
-        private const int MIN_SEARCH_LENGTH = 3;
-        private const int MAX_RESULTS = 20;
-
-        ReferencedImage[] searchCache;
         SearchResult[] searchResults;
-
-        private string previousSearchString;
         
         private TextBox searchBar;
         private Panel resultPanel;
@@ -39,8 +33,14 @@ namespace Yumu
             get => searchResults != null && searchResults.Length > 0;
         }
 
+        private DBAccessor dbAccessor;
+        public DBSearch dbSearch;
+
         public SearchWindow() : base("Yumu search", 300, 400)
         {
+            dbAccessor = new DBAccessor();
+            dbSearch = new DBSearch(dbAccessor);
+
             InitializeComponents();
         }
 
@@ -57,8 +57,6 @@ namespace Yumu
             Controls.Add(searchBar);
 
             ActiveControl = searchBar;
-            
-            previousSearchString = searchBar.Text;
 
             int yPos = Y_MARGIN * 2 + searchBar.PreferredHeight;
             int ySize = ClientRectangle.Height - yPos;
@@ -97,7 +95,7 @@ namespace Yumu
                 case Keys.Enter:
                     SearchResult selection = searchResults[selectedIndex];
                     selection.CopyToClipboard();
-                    selection.IncrementImageUsage();
+                    selection.UpdateImageUsage();
                     Close();
                     break;
 
@@ -133,29 +131,20 @@ namespace Yumu
         {
             if(HasResults){
                 foreach(SearchResult item in searchResults){
-                    resultPanel.Controls.Remove(item);//item.Dispose();
+                    resultPanel.Controls.Remove(item); // item.Dispose();
                 }
             }
         }
 
         private void BuildSearchResults()
         {
-            if(searchCache == null || searchCache.Length == 0)
+            ReferencedImage[] results = dbSearch.searchCache;
+            if(results == null || results.Length == 0)
                 return;
             
-            // Sort images according to their usage
-            Array.Sort(searchCache, (ReferencedImage imgA, ReferencedImage imgB) => {
-                if(imgA.Usage > imgB.Usage)
-                    return -1;
-                else if(imgA.Usage < imgB.Usage)
-                    return 1;
-                return 0;
-            });
-
-            int numResults = Math.Min(searchCache.Length, MAX_RESULTS);
-            searchResults = new SearchResult[numResults];
-            for(int i = 0; i < numResults; i++){
-                searchResults[i] = new SearchResult(this, searchCache[i], i);
+            searchResults = new SearchResult[results.Length];
+            for(int i = 0; i < searchResults.Length; i++){
+                searchResults[i] = new SearchResult(this, results[i], i);
             }
 
             if(resultPanel.VerticalScroll.Visible){
@@ -169,47 +158,14 @@ namespace Yumu
         {
             StopLoadingPreviews();
 
-            SearchReferencedImages();
-            previousSearchString = searchBar.Text;
+            dbSearch.Search(searchBar.Text);
 
             ClearSearchResults();
             BuildSearchResults();
-            StartLoadingPreviews();
 
             SelectResult(0);
-        }
 
-        private void SearchReferencedImages()
-        {
-            string searchString = ReferencedImage.ToSearchString(searchBar.Text);
-            if(searchString.Length < MIN_SEARCH_LENGTH){
-                searchCache = null;
-                return;
-            } else if(searchString == previousSearchString){
-                return;
-            }
-
-            // Do not search in the database but rather in the cached
-            // images if the search string only gained new characters
-            if(searchString.Length > previousSearchString.Length
-                && searchString.StartsWith(previousSearchString)
-                && searchCache != null)
-            {
-                searchCache = SearchInCache(searchString);
-            } else {
-                searchCache = ReferencedImage.Find(searchString);
-            }
-        }
-
-        private ReferencedImage[] SearchInCache(string searchString)
-        {
-            List<ReferencedImage> foundImages = new List<ReferencedImage>();
-            foreach(ReferencedImage cachedImage in searchCache){
-                if(cachedImage.SimplifiedName.Contains(searchString)){
-                    foundImages.Add(cachedImage);
-                }
-            }
-            return foundImages.ToArray();
+            StartLoadingPreviews();
         }
 
         private async void StartLoadingPreviews()
@@ -226,8 +182,9 @@ namespace Yumu
 
         private void StopLoadingPreviews()
         {
-            if(tokenSource != null)
+            if(tokenSource != null) {
                 tokenSource.Cancel();
+            }
         }
 
         private void LoadImagePreviews(CancellationToken token)

@@ -17,7 +17,9 @@ namespace Yumu
         {
             // Create data files (for directory and image referencing)
             // Files are only created if they don't exist
-            DB.CreateDataFiles();
+            DB.CreateDataFiles(new string[] {
+                ReferencedDirectory.DataFile, ReferencedImage.DataFile
+            });
 
             // Initialize Tray Icon
             trayIcon = new NotifyIcon()
@@ -55,9 +57,7 @@ namespace Yumu
         {
             // Hide tray icon, otherwise it will remain shown until user mouses over it
             trayIcon.Visible = false;
-            
             hk.Unregister();
-
             Application.Exit();
         }
 

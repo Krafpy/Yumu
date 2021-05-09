@@ -29,18 +29,25 @@ namespace Yumu
             get => selected;
             set {
                 selected = value;
-                if(selected)
-                    BackColor = hoverBackground;
-                else
-                    BackColor = defaultBackground;
+                BackColor = selected ? hoverBackground : defaultBackground;
             }
         }
+
+        private string imagePath;
+
+        private DBSearch dbSearch;
+        private DBAccessor dbAccessor;
 
         public SearchResult(SearchWindow searchWindow, ReferencedImage attachedImage, int order) : base(searchWindow.ResultPanel)
         {
             this.searchWindow = searchWindow;
             this.attachedImage = attachedImage;
             this.order = order;
+
+            dbSearch = this.searchWindow.dbSearch;
+            dbAccessor = dbSearch.Accessor;
+
+            imagePath = dbSearch.GetImageFullPath(attachedImage);
 
             InitializeComponents();
         }
@@ -56,10 +63,10 @@ namespace Yumu
 
             // Label containing the image title
             string title;
-            if(attachedImage.DisplayTitle.Length > TITLE_LENGTH_LIMIT)
-                title = attachedImage.DisplayTitle.Substring(0, TITLE_LENGTH_LIMIT) + "...";
+            if(attachedImage.DisplayName.Length > TITLE_LENGTH_LIMIT)
+                title = attachedImage.DisplayName.Substring(0, TITLE_LENGTH_LIMIT) + "...";
             else
-                title = attachedImage.DisplayTitle;
+                title = attachedImage.DisplayName;
             Label titleLab = new Label(){
                 Text = title,
                 Font = new Font(Window.FONT_NAME, 10, FontStyle.Bold),
@@ -78,20 +85,21 @@ namespace Yumu
         private void OnDoubleClick(object sender, EventArgs e)
         {
             CopyToClipboard();
-            IncrementImageUsage();
+            UpdateImageUsage();
+
             searchWindow.Close();
         }
 
         private void OnMouseDown(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Left && e.Clicks == 1)
+            if (e.Button == MouseButtons.Left && e.Clicks == 1 && File.Exists(imagePath))
             {
                 DataObject data = new DataObject();
-                string[] file = {attachedImage.FullPath};
+                string[] file = {imagePath};
                 data.SetData(DataFormats.FileDrop, file);
                 DragDropEffects effect = DoDragDrop(data, DragDropEffects.Copy);
                 if(effect != DragDropEffects.None){ // We consider that the user used the image if he dropped it
-                    IncrementImageUsage();
+                    UpdateImageUsage();
                 }
             }
         }
@@ -110,10 +118,10 @@ namespace Yumu
 
         public void LoadImagePreview()
         {
-            if(!File.Exists(attachedImage.FullPath))
+            if(!File.Exists(imagePath))
                 return;
 
-            FileInfo imgFile = new FileInfo(attachedImage.FullPath);
+            FileInfo imgFile = new FileInfo(imagePath);
             if(imgFile.Length > FILE_SIZE_LIMIT)
                 return;
             
@@ -158,17 +166,20 @@ namespace Yumu
 
         public void CopyToClipboard()
         {
-            attachedImage.CopyToClipboard();
+            if(File.Exists(imagePath))
+                ImageUtils.CopyToClipboard(imagePath);
         }
 
-        public void IncrementImageUsage()
+        public void UpdateImageUsage()
         {
             if(!imageWasUsed){
                 imageWasUsed = true;
                 attachedImage.Usage++;
-                // Update async in order to avoid eventual freezes
+                dbAccessor.UpdateReferencedImage(attachedImage.Id);
+                /*// Update async in order to avoid eventual freezes
                 // on form closing.
-                Task.Run(() => attachedImage.UpdateInDB());
+                Task.Run(() => 
+                dbAccessor.UpdateReferencedImage(attachedImage.Id));*/
             }
         }
     }
