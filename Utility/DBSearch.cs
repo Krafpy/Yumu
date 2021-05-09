@@ -11,6 +11,7 @@ namespace Yumu
         public DBAccessor Accessor {get => _dbAccessor;}
         
         public ReferencedImage[] searchCache;
+        public ReferencedImage[] results;
 
         private string prevSearchString;
 
@@ -23,17 +24,18 @@ namespace Yumu
             prevSearchString = null;
         }
 
-        public ReferencedImage[] Search(string searchInput)
+        public bool Search(string searchInput)
         {
             string searchString = ReferencedImage.SimplifyString(searchInput);
 
             if(prevSearchString == searchString) {
-                return null;
+                return false;
             }
             if(searchString.Length < MIN_SEARCH_LENGTH) {
                 searchCache = null;
                 prevSearchString = null;
-                return null;
+                results = null;
+                return true;
             }
 
             List<ReferencedImage> found;
@@ -52,12 +54,22 @@ namespace Yumu
             found = found.OrderBy(img => img.DisplayName).ToList();
             found = found.OrderByDescending(img => img.Usage).ToList();
             int numResults = Math.Min(found.Count, MAX_RESULTS);
-            ReferencedImage[] result = found.GetRange(0, numResults).ToArray();
+            ReferencedImage[] newResults = found.GetRange(0, numResults).ToArray();
             
-            searchCache = result;
+            bool same = false;
+            if(results != null && newResults.Length == results.Length){
+                same = true;
+                for(int i = 0; i < results.Length && same; ++i){
+                    same = newResults[i].Id == results[i].Id;
+                }
+            }
+
+            results = newResults;
+            
+            searchCache = found.ToArray();
             prevSearchString = searchString;
 
-            return result;
+            return !same;
         }
 
         private List<ReferencedImage> Find(ReferencedImage[] images, string searchString)

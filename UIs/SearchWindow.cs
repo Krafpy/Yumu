@@ -142,7 +142,7 @@ namespace Yumu
 
         private void BuildSearchResults()
         {
-            ReferencedImage[] results = dbSearch.searchCache;
+            ReferencedImage[] results = dbSearch.results;
             if(results == null || results.Length == 0)
                 return;
             
@@ -160,16 +160,18 @@ namespace Yumu
 
         private void OnTextChange(object sender, EventArgs e)
         {
-            StopLoadingPreviews();
+            bool hasDifferentResults = dbSearch.Search(searchBar.Text);
 
-            dbSearch.Search(searchBar.Text);
+            if(hasDifferentResults) {
+                StopLoadingPreviews();
 
-            ClearSearchResults();
-            BuildSearchResults();
+                ClearSearchResults();
+                BuildSearchResults();
 
-            SelectResult(0);
+                SelectResult(0);
 
-            StartLoadingPreviews();
+                StartLoadingPreviews();
+            }
         }
 
         private async void StartLoadingPreviews()
