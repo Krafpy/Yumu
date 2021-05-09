@@ -1,20 +1,21 @@
 namespace Yumu
 {
-    /// <summary>Represents an element that can be stored in a data file.</summary>
-    class DBItem
+    abstract class DBItem
     {
-        protected int id;
-
-        /// <summary>The unique ID that identifies this item in the database.</summary>
+        protected int _id;
         public int Id {
-            get => id;
-            set => id = value;
+            get => _id;
+            set => _id = value;
         }
 
-        /// <param name="id">the unique ID that identifies this item in the database.</param>
-        public DBItem(int id)
+        protected DBItem(int id)
         {
-            this.id = id;
+            _id = id;
         }
+
+        protected DBItem() { }
+
+        public abstract byte[] ToDataRow();
+        public abstract void FromDataRow(byte[] data);
     }
 }

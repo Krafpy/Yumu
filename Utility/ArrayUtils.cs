@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using System.Collections.Generic;
 /*using System.Runtime.Serialization.Formatters.Binary;
 using System.Runtime.InteropServices;
 using System.IO;*/
@@ -12,12 +13,12 @@ namespace Yumu
         /// <param name="arr">the array to check.</param>
         public static bool IsIntegerArraySorted(int[] arr)
         {
-            int j = arr.Length - 1;
-            if (j < 1) return true;
-            int ai = arr[0];
-            int i = 1;
-            while (i <= j && ai <= (ai = arr[i])) i++;
-            return i > j;
+            if(arr.Length <= 1) return true;
+            for(int i = 0; i < arr.Length - 1; ++i){
+                if(arr[i] > arr[i+1])
+                    return false;
+            }
+            return true;
         }
         
         /// <summary>Stores the bytes of an integer in a byte array.</summary>

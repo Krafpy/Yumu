@@ -27,8 +27,11 @@ namespace Yumu
 
         public Panel DirsPanel {get => dirsPanel;}
 
+        public DBAccessor dbAccessor;
+
         public DirectoryManager() : base("Yumu directories", 500, 400)
         {
+            dbAccessor = new DBAccessor();
             InitializeComponents();
         }
 
@@ -112,10 +115,11 @@ namespace Yumu
         {
             base.OnDragEnter(e);
 
-            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            if (e.Data.GetDataPresent(DataFormats.FileDrop)) {
                 e.Effect = DragDropEffects.Copy;
-            else
+            } else {
                 e.Effect = DragDropEffects.None;
+            }
         }
 
         protected override void OnDragDrop(DragEventArgs e)
@@ -149,10 +153,9 @@ namespace Yumu
         {
             ClearDirectoryList();
 
-            ReferencedDirectory[] allDirs = DB.GetReferencedDirectories().ToArray();
-            dirControls = new DirectoryControl[allDirs.Length];
-            for(int i = 0; i < allDirs.Length; i++){
-                dirControls[i] = new DirectoryControl(this, allDirs[i], i);
+            dirControls = new DirectoryControl[dbAccessor.Directories.Count];
+            for(int i = 0; i < dirControls.Length; i++){
+                dirControls[i] = new DirectoryControl(this, dbAccessor.Directories[i], i);
             }
         }
 
@@ -189,15 +192,8 @@ namespace Yumu
 
         private void AppendNewDirectory(string path)
         {
-            // Appends a new directory only if it's not already referenced
-            // otherwise only rereferences its images.
             ReferencedDirectory dir = new ReferencedDirectory(path);
-            if(dir.Exists)
-                dir = ReferencedDirectory.FindFromPath(dir.FullPath);
-            else
-                dir.AppendToDB();
-            dir.ReferenceContainedImages();
-            dir.UpdateInDB();
+            dbAccessor.AppendDirectoryReference(dir);
         }
     }
 }
