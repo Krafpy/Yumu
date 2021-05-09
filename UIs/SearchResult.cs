@@ -16,7 +16,7 @@ namespace Yumu
 
         private const int TITLE_LENGTH_LIMIT = 20;
 
-        private ReferencedImage attachedImage;
+        public ReferencedImage attachedImage;
         private SearchWindow searchWindow;
         private int order;
 
@@ -116,14 +116,14 @@ namespace Yumu
             searchWindow.SelectedIndex = this.order;
         }
 
-        public void LoadImagePreview()
+        public Image LoadImagePreview()
         {
             if(!File.Exists(imagePath))
-                return;
+                return null;
 
             FileInfo imgFile = new FileInfo(imagePath);
             if(imgFile.Length > FILE_SIZE_LIMIT)
-                return;
+                return null;
             
             Image img = Image.FromFile(imgFile.FullName);
             
@@ -134,6 +134,34 @@ namespace Yumu
 
             int sizeX = Convert.ToInt32((float)img.Width / ratio);
             int sizeY = Convert.ToInt32((float)img.Height / ratio);
+
+            (int posX, int posY) pos = AdaptedImageLocation(img, sizeX, sizeY);
+            int posX = pos.posX;
+            int posY = pos.posY;
+
+            Image.GetThumbnailImageAbort callback =
+                new Image.GetThumbnailImageAbort(() => true);
+            Image thumb = img.GetThumbnailImage(sizeX, sizeY, callback, IntPtr.Zero);
+            
+            CreatePreviewBox(thumb, posX, posY, sizeX, sizeY);
+
+            return thumb;
+        }
+
+        public void AttachImagePreview(Image thumb)
+        {
+            int sizeX = thumb.Width;
+            int sizeY = thumb.Height;
+            
+            (int posX, int posY) pos = AdaptedImageLocation(thumb, sizeX, sizeY);
+            int posX = pos.posX;
+            int posY = pos.posY;
+
+            CreatePreviewBox(thumb, posX, posY, sizeX, sizeY);
+        }
+
+        private static (int posX, int posY) AdaptedImageLocation(Image img, int sizeX, int sizeY)
+        {
             int posX = 0;
             int posY = 0;
 
@@ -142,10 +170,11 @@ namespace Yumu
             else if(img.Width < img.Height)
                 posX = (ROW_HEIGHT - sizeX) / 2;
 
-            Image.GetThumbnailImageAbort callback =
-                new Image.GetThumbnailImageAbort(() => true);
-            Image thumb = img.GetThumbnailImage(sizeX, sizeY, callback, IntPtr.Zero);
-            
+            return (posX, posY);
+        }
+
+        private void CreatePreviewBox(Image thumb, int posX, int posY, int sizeX, int sizeY)
+        {
             preview = new PictureBox(){
                 Image = thumb,
                 Location = new Point(posX, posY),
@@ -176,10 +205,6 @@ namespace Yumu
                 imageWasUsed = true;
                 attachedImage.Usage++;
                 dbAccessor.UpdateReferencedImage(attachedImage.Id);
-                /*// Update async in order to avoid eventual freezes
-                // on form closing.
-                Task.Run(() => 
-                dbAccessor.UpdateReferencedImage(attachedImage.Id));*/
             }
         }
     }

@@ -36,10 +36,14 @@ namespace Yumu
         private DBAccessor dbAccessor;
         public DBSearch dbSearch;
 
+        private Dictionary<int, Image> loadedThumbnails;
+
         public SearchWindow() : base("Yumu search", 300, 400)
         {
             dbAccessor = new DBAccessor();
             dbSearch = new DBSearch(dbAccessor);
+
+            loadedThumbnails = new Dictionary<int, Image>();
 
             InitializeComponents();
         }
@@ -171,9 +175,14 @@ namespace Yumu
         private async void StartLoadingPreviews()
         {
             if(!HasResults) return;
-            
-            tokenSource = new CancellationTokenSource();
-            await Task.Run(() => LoadImagePreviews(tokenSource.Token));
+
+            if(tokenSource == null || tokenSource.IsCancellationRequested) {
+                tokenSource = new CancellationTokenSource();
+                await Task.Run(() => LoadImagePreviews(tokenSource.Token));
+            } else {
+                while(!tokenSource.IsCancellationRequested) { }
+                await Task.Run(() => LoadImagePreviews(tokenSource.Token));
+            }
 
             foreach(SearchResult item in searchResults){
                 item.AddImagePreview();
@@ -189,11 +198,18 @@ namespace Yumu
 
         private void LoadImagePreviews(CancellationToken token)
         {
-            foreach(SearchResult item in searchResults){
+            foreach(SearchResult result in searchResults){
                 if(token.IsCancellationRequested){
                     return;
                 }
-                item.LoadImagePreview();
+                
+                int imgId = result.attachedImage.Id;
+                if(loadedThumbnails.ContainsKey(imgId)) {
+                    result.AttachImagePreview(loadedThumbnails[imgId]);
+                } else {
+                    Image thumb = result.LoadImagePreview();
+                    loadedThumbnails.Add(imgId, thumb);
+                }
             }
         }
     }
