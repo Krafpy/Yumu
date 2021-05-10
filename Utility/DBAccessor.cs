@@ -50,13 +50,13 @@ namespace Yumu
         {
             for(int i = 0; i < _directories.Count; ++i){
                 if(_directories[i].Id == dirId){
-                    DB.RemoveItem<ReferencedDirectory>(dirId, 
-                    ReferencedDirectory.DataFile, 
-                    _directories.ToArray());
                     RemoveReferencedImages(dirId);
 
                     _directories.RemoveAt(i);
                     _directories = _directories.OrderBy(dir => dir.Id).ToList();
+
+                    DB.UpdateContent<ReferencedDirectory>(_directories.ToArray(),
+                    ReferencedDirectory.DataFile);
 
                     break;
                 }
@@ -73,10 +73,6 @@ namespace Yumu
             }
 
             if(!removeIds.Any()) return;
-
-            DB.RemoveItems<ReferencedImage>(removeIds.ToArray(),
-            ReferencedImage.DataFile, 
-            _images.ToArray());
             
             int rmIndex = removeIds.Count - 1;
             int swapEnd = _images.Count - 1;
@@ -92,6 +88,9 @@ namespace Yumu
 
             _images.RemoveRange(swapEnd + 1, removeIds.Count);
             _images = _images.OrderBy(img => img.Id).ToList();
+
+            DB.UpdateContent<ReferencedImage>(_images.ToArray(), 
+            ReferencedImage.DataFile);
         }
 
         public void UpdateReferencedDirectory(int dirId)
