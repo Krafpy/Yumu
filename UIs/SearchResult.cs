@@ -86,7 +86,7 @@ namespace Yumu
         {
             CopyToClipboard();
             UpdateImageUsage();
-
+            
             searchWindow.Close();
         }
 

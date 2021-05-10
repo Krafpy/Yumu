@@ -44,6 +44,7 @@ namespace Yumu
             dbSearch = new DBSearch(dbAccessor);
 
             loadedThumbnails = new Dictionary<int, Image>();
+            searchResults = new SearchResult[0];
 
             InitializeComponents();
         }
@@ -97,6 +98,10 @@ namespace Yumu
                     break;
                 
                 case Keys.Enter:
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+                    if(!HasResults)
+                        break;
                     SearchResult selection = searchResults[selectedIndex];
                     selection.CopyToClipboard();
                     selection.UpdateImageUsage();
@@ -114,16 +119,11 @@ namespace Yumu
         {
             if(!HasResults) return;
             
-            if(selectedIndex >= 0 && newIndex < searchResults.Length){
+            if(newIndex >= 0 && newIndex < searchResults.Length){
                 if(selectedIndex < searchResults.Length)
                     searchResults[selectedIndex].Selected = false;
                 
                 selectedIndex = newIndex;
-
-                if(selectedIndex < 0)
-                    selectedIndex = 0;
-                else if(selectedIndex >= searchResults.Length)
-                    selectedIndex = searchResults.Length - 1;
                 
                 SearchResult selection = searchResults[selectedIndex];
                 selection.Selected = true;
@@ -142,9 +142,7 @@ namespace Yumu
 
         private void BuildSearchResults()
         {
-            ReferencedImage[] results = dbSearch.results;
-            if(results == null || results.Length == 0)
-                return;
+            ReferencedImage[] results = dbSearch.Results;
             
             searchResults = new SearchResult[results.Length];
             for(int i = 0; i < searchResults.Length; i++){
@@ -160,16 +158,13 @@ namespace Yumu
 
         private void OnTextChange(object sender, EventArgs e)
         {
-            bool hasDifferentResults = dbSearch.Search(searchBar.Text);
+            bool haveSameResults = dbSearch.Search(searchBar.Text);
 
-            if(hasDifferentResults) {
+            if(!haveSameResults) {
                 StopLoadingPreviews();
-
                 ClearSearchResults();
                 BuildSearchResults();
-
                 SelectResult(0);
-
                 StartLoadingPreviews();
             }
         }
@@ -178,13 +173,11 @@ namespace Yumu
         {
             if(!HasResults) return;
 
-            if(tokenSource == null || tokenSource.IsCancellationRequested) {
-                tokenSource = new CancellationTokenSource();
-                await Task.Run(() => LoadImagePreviews(tokenSource.Token));
-            } else {
+            if(tokenSource != null) {
                 while(!tokenSource.IsCancellationRequested) { }
-                await Task.Run(() => LoadImagePreviews(tokenSource.Token));
             }
+            tokenSource = new CancellationTokenSource();
+            await Task.Run(() => LoadImagePreviews(tokenSource.Token));
 
             foreach(SearchResult item in searchResults){
                 item.AddImagePreview();

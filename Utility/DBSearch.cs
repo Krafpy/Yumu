@@ -10,8 +10,11 @@ namespace Yumu
         private DBAccessor _dbAccessor;
         public DBAccessor Accessor {get => _dbAccessor;}
         
-        public ReferencedImage[] searchCache;
-        public ReferencedImage[] results;
+        private ReferencedImage[] results;
+        public ReferencedImage[] Results {get => results;}
+
+        private ReferencedImage[] prevResults;
+        private ReferencedImage[] cache;
 
         private string prevSearchString;
 
@@ -21,58 +24,63 @@ namespace Yumu
         public DBSearch(DBAccessor dbAccessor)
         {
             _dbAccessor = dbAccessor;
+            
             prevSearchString = null;
+
+            results = new ReferencedImage[0];
+            prevResults = new ReferencedImage[0];
+            cache = new ReferencedImage[0];
         }
 
         public bool Search(string searchInput)
         {
             string searchString = ReferencedImage.SimplifyString(searchInput);
+            bool same = true;
 
             if(prevSearchString == searchString) {
-                return false;
+                return true;
             }
             if(searchString.Length < MIN_SEARCH_LENGTH) {
-                searchCache = null;
+                same = results.Length == 0;
+
                 prevSearchString = null;
-                results = null;
-                return true;
+                
+                results = new ReferencedImage[0];
+                prevResults = new ReferencedImage[0];
+                cache = new ReferencedImage[0];
+                
+                return same;
             }
 
             List<ReferencedImage> found;
 
             bool searchInCache = prevSearchString != null &&
-                searchCache != null &&
                 searchString.Length > prevSearchString.Length &&
                 searchString.Substring(0, prevSearchString.Length) == prevSearchString;
 
             if(searchInCache) {
-                found = Find(searchCache, searchString);
+                found = Find(cache, searchString);
             } else {
                 found = Find(_dbAccessor.Images.ToArray(), searchString);
             }
 
             found = found.OrderBy(img => img.DisplayName).ToList();
             found = found.OrderByDescending(img => img.Usage).ToList();
+            cache = found.ToArray();
+            
             int numResults = Math.Min(found.Count, MAX_RESULTS);
-            ReferencedImage[] newResults = found.GetRange(0, numResults).ToArray();
+            results = found.GetRange(0, numResults).ToArray();
             
-            bool same = false;
-            if(results != null && newResults.Length == results.Length){
-                same = true;
-                for(int i = 0; i < results.Length && same; ++i){
-                    same = newResults[i].Id == results[i].Id;
-                }
-            }
-
-            results = newResults;
-            
-            searchCache = found.ToArray();
             prevSearchString = searchString;
+            same = AreNewResultsSame();
 
-            return !same;
+            prevResults = new ReferencedImage[results.Length];
+            Array.Copy(results, prevResults, results.Length);
+
+            return same;
         }
 
-        private List<ReferencedImage> Find(ReferencedImage[] images, string searchString)
+        private static List<ReferencedImage> Find(ReferencedImage[] images, string searchString)
         {
             List<ReferencedImage> found = new List<ReferencedImage>();
             foreach(ReferencedImage img in images) {
@@ -90,6 +98,18 @@ namespace Yumu
                 return dir.FullPath + "\\" + img.FileName;
             }
             return null;
+        }
+
+        private bool AreNewResultsSame()
+        {
+            if(results.Length != prevResults.Length) {
+                return false;
+            }
+            bool same = true;
+            for(int i = 0; i < results.Length && same; ++i){
+                same = results[i].Id == prevResults[i].Id;
+            }
+            return same;
         }
     }
 }
