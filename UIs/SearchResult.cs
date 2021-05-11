@@ -16,38 +16,38 @@ namespace Yumu
 
         private const int TITLE_LENGTH_LIMIT = 20;
 
-        public ReferencedImage attachedImage;
-        private SearchWindow searchWindow;
-        private int order;
+        public ReferencedImage AttachedImage;
+        private SearchWindow _searchWindow;
+        private int _order;
 
-        private PictureBox preview;
+        private PictureBox _preview;
 
-        private bool selected = false;
-        private bool imageWasUsed = false;
+        private bool _imageWasUsed = false;
         
+        private bool _selected = false;
         public bool Selected {
-            get => selected;
+            get => _selected;
             set {
-                selected = value;
-                BackColor = selected ? hoverBackground : defaultBackground;
+                _selected = value;
+                BackColor = _selected ? hoverBackground : defaultBackground;
             }
         }
 
         private string imagePath;
 
-        private DBSearch dbSearch;
-        private DBAccessor dbAccessor;
+        private Searcher _searcher;
+        private DBAccessor _accessor;
 
         public SearchResult(SearchWindow searchWindow, ReferencedImage attachedImage, int order) : base(searchWindow.ResultPanel)
         {
-            this.searchWindow = searchWindow;
-            this.attachedImage = attachedImage;
-            this.order = order;
+            _searchWindow = searchWindow;
+            AttachedImage = attachedImage;
+            _order = order;
 
-            dbSearch = this.searchWindow.dbSearch;
-            dbAccessor = dbSearch.Accessor;
+            _searcher = _searchWindow.Searcher;
+            _accessor = _searcher.Accessor;
 
-            imagePath = dbSearch.GetImageFullPath(attachedImage);
+            imagePath = _searcher.GetImageFullPath(AttachedImage);
 
             InitializeComponents();
         }
@@ -55,7 +55,7 @@ namespace Yumu
         private void InitializeComponents()
         {    
             Size = new Size(parent.Width, ROW_HEIGHT);
-            Location = new Point(0, order * (ROW_HEIGHT + SEPARATION));
+            Location = new Point(0, _order * (ROW_HEIGHT + SEPARATION));
             
             MouseDown += OnMouseDown;
             DoubleClick += OnDoubleClick;
@@ -63,10 +63,10 @@ namespace Yumu
 
             // Label containing the image title
             string title;
-            if(attachedImage.DisplayName.Length > TITLE_LENGTH_LIMIT)
-                title = attachedImage.DisplayName.Substring(0, TITLE_LENGTH_LIMIT) + "...";
+            if(AttachedImage.DisplayName.Length > TITLE_LENGTH_LIMIT)
+                title = AttachedImage.DisplayName.Substring(0, TITLE_LENGTH_LIMIT) + "...";
             else
-                title = attachedImage.DisplayName;
+                title = AttachedImage.DisplayName;
             Label titleLab = new Label(){
                 Text = title,
                 Font = new Font(Window.FONT_NAME, 10, FontStyle.Bold),
@@ -87,7 +87,7 @@ namespace Yumu
             CopyToClipboard();
             UpdateImageUsage();
             
-            searchWindow.Close();
+            _searchWindow.Close();
         }
 
         private void OnMouseDown(object sender, MouseEventArgs e)
@@ -107,13 +107,13 @@ namespace Yumu
         protected override void OnEnter(object sender, EventArgs e)
         {
             base.OnEnter(sender, e);
-            searchWindow.SelectedIndex = this.order;
+            _searchWindow.SelectedIndex = _order;
         }
 
         protected override void OnLeave(object sender, EventArgs e)
         {
             base.OnLeave(sender, e);
-            searchWindow.SelectedIndex = this.order;
+            _searchWindow.SelectedIndex = _order;
         }
 
         public Image LoadImagePreview()
@@ -175,22 +175,22 @@ namespace Yumu
 
         private void CreatePreviewBox(Image thumb, int posX, int posY, int sizeX, int sizeY)
         {
-            preview = new PictureBox(){
+            _preview = new PictureBox(){
                 Image = thumb,
                 Location = new Point(posX, posY),
                 Size = new Size(sizeX, sizeY)
             };
 
-            AddHoverOnElement(preview);
-            preview.MouseDown += OnMouseDown;
-            preview.DoubleClick += OnDoubleClick;
-            preview.Cursor = Cursors.Hand;
+            AddHoverOnElement(_preview);
+            _preview.MouseDown += OnMouseDown;
+            _preview.DoubleClick += OnDoubleClick;
+            _preview.Cursor = Cursors.Hand;
         }
 
         public void AddImagePreview()
         {
-            if(preview != null)
-                Controls.Add(preview);
+            if(_preview != null)
+                Controls.Add(_preview);
         }
 
         public void CopyToClipboard()
@@ -201,10 +201,10 @@ namespace Yumu
 
         public void UpdateImageUsage()
         {
-            if(!imageWasUsed){
-                imageWasUsed = true;
-                attachedImage.Usage++;
-                dbAccessor.UpdateReferencedImage(attachedImage.Id);
+            if(!_imageWasUsed){
+                _imageWasUsed = true;
+                AttachedImage.Usage++;
+                _accessor.UpdateReferencedImage(AttachedImage.Id);
             }
         }
     }

@@ -5,31 +5,31 @@ using System.IO;
 
 namespace Yumu
 {
-    class DBSearch
+    class Searcher
     {
-        private DBAccessor _dbAccessor;
-        public DBAccessor Accessor {get => _dbAccessor;}
+        private DBAccessor _accessor;
+        public DBAccessor Accessor {get => _accessor;}
         
-        private ReferencedImage[] results;
-        public ReferencedImage[] Results {get => results;}
+        private ReferencedImage[] _results;
+        public ReferencedImage[] Results {get => _results;}
 
-        private ReferencedImage[] prevResults;
-        private ReferencedImage[] cache;
+        private ReferencedImage[] _prevResults;
+        private ReferencedImage[] _cache;
 
-        private string prevSearchString;
+        private string _prevSearchString;
 
         private const int MIN_SEARCH_LENGTH = 3;
         private const int MAX_RESULTS = 20;
 
-        public DBSearch(DBAccessor dbAccessor)
+        public Searcher(DBAccessor accessor)
         {
-            _dbAccessor = dbAccessor;
+            _accessor = accessor;
             
-            prevSearchString = null;
+            _prevSearchString = null;
 
-            results = new ReferencedImage[0];
-            prevResults = new ReferencedImage[0];
-            cache = new ReferencedImage[0];
+            _results = new ReferencedImage[0];
+            _prevResults = new ReferencedImage[0];
+            _cache = new ReferencedImage[0];
         }
 
         public bool Search(string searchInput)
@@ -37,45 +37,45 @@ namespace Yumu
             string searchString = ReferencedImage.SimplifyString(searchInput);
             bool same = true;
 
-            if(prevSearchString == searchString) {
+            if(_prevSearchString == searchString) {
                 return true;
             }
             if(searchString.Length < MIN_SEARCH_LENGTH) {
-                same = results.Length == 0;
+                same = _results.Length == 0;
 
-                prevSearchString = null;
+                _prevSearchString = null;
                 
-                results = new ReferencedImage[0];
-                prevResults = new ReferencedImage[0];
-                cache = new ReferencedImage[0];
+                _results = new ReferencedImage[0];
+                _prevResults = new ReferencedImage[0];
+                _cache = new ReferencedImage[0];
                 
                 return same;
             }
 
             List<ReferencedImage> found;
 
-            bool searchInCache = prevSearchString != null &&
-                searchString.Length > prevSearchString.Length &&
-                searchString.Substring(0, prevSearchString.Length) == prevSearchString;
+            bool searchInCache = _prevSearchString != null &&
+                searchString.Length > _prevSearchString.Length &&
+                searchString.Substring(0, _prevSearchString.Length) == _prevSearchString;
 
             if(searchInCache) {
-                found = Find(cache, searchString);
+                found = Find(_cache, searchString);
             } else {
-                found = Find(_dbAccessor.Images.ToArray(), searchString);
+                found = Find(_accessor.Images.ToArray(), searchString);
             }
 
             found = found.OrderBy(img => img.DisplayName).ToList();
             found = found.OrderByDescending(img => img.Usage).ToList();
-            cache = found.ToArray();
+            _cache = found.ToArray();
             
             int numResults = Math.Min(found.Count, MAX_RESULTS);
-            results = found.GetRange(0, numResults).ToArray();
+            _results = found.GetRange(0, numResults).ToArray();
             
-            prevSearchString = searchString;
+            _prevSearchString = searchString;
             same = AreNewResultsSame();
 
-            prevResults = new ReferencedImage[results.Length];
-            Array.Copy(results, prevResults, results.Length);
+            _prevResults = new ReferencedImage[_results.Length];
+            Array.Copy(_results, _prevResults, _results.Length);
 
             return same;
         }
@@ -93,7 +93,7 @@ namespace Yumu
 
         public string GetImageFullPath(ReferencedImage img)
         {
-            ReferencedDirectory dir = _dbAccessor.GetReferencedDirectory(img.DirId);
+            ReferencedDirectory dir = _accessor.GetReferencedDirectory(img.DirId);
             if(dir != null){
                 return dir.FullPath + "\\" + img.FileName;
             }
@@ -102,12 +102,12 @@ namespace Yumu
 
         private bool AreNewResultsSame()
         {
-            if(results.Length != prevResults.Length) {
+            if(_results.Length != _prevResults.Length) {
                 return false;
             }
             bool same = true;
-            for(int i = 0; i < results.Length && same; ++i){
-                same = results[i].Id == prevResults[i].Id;
+            for(int i = 0; i < _results.Length && same; ++i){
+                same = _results[i].Id == _prevResults[i].Id;
             }
             return same;
         }
