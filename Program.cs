@@ -8,19 +8,12 @@ namespace Yumu
 {
     class Program
     {   
-        [DllImport("user32.dll")]
-        static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-
         [STAThread]
         static void Main(string[] args)
         {
             if(AppIsAlreadyRunning()) {
                 return;
             }
-
-            IntPtr h = Process.GetCurrentProcess().MainWindowHandle;
-            ShowWindow(h, 0);
-            //Console.WriteLine("Hello World!");
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);

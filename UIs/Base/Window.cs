@@ -1,4 +1,3 @@
-using System;
 using System.Windows.Forms;
 using System.Drawing;
 
@@ -9,16 +8,16 @@ namespace Yumu
     {
         public const string FONT_NAME = "Microsoft PhagsPa";
 
-        private static bool opened = false;
-        private static Window current;
+        private static bool _opened = false;
+        private static Window _current;
 
-        public static bool Opened { get => opened; }
-        public static Window Current {get => current;}
+        public static bool Opened { get => _opened; }
+        public static Window Current {get => _current;}
 
         public Window(string title, int width, int height)
         {
-            current = this;
-            opened = true;
+            _current = this;
+            _opened = true;
 
             Text = title;
             ClientSize = new Size(width, height);
@@ -42,7 +41,7 @@ namespace Yumu
 
         protected virtual void OnFormClose(object sender, FormClosedEventArgs e)
         {
-            opened = false;
+            _opened = false;
         }
     }    
 }

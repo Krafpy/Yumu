@@ -12,39 +12,40 @@ namespace Yumu
         private const int X_MARGIN = 10;
         private const int Y_MARGIN = 10;
 
-        SearchResult[] searchResults;
+        private SearchResult[] _searchResults;
         
-        private TextBox searchBar;
-        private Panel resultPanel;
+        private TextBox _searchBar;
+        private Panel _resultPanel;
 
-        private CancellationTokenSource tokenSource;
+        public TextBox SearchBar {get => _searchBar;}
+        public Panel ResultPanel {get => _resultPanel;}
 
-        public TextBox SearchBar {get => searchBar;}
-        public Panel ResultPanel {get => resultPanel;}
+        private CancellationTokenSource _tokenSource;
 
-        private int selectedIndex;
+        private int _selectedIndex;
         
         public int SelectedIndex {
-            get => selectedIndex;
+            get => _selectedIndex;
             set => SelectResult(value);
         }
 
-        private bool HasResults {
-            get => searchResults != null && searchResults.Length > 0;
+        private bool hasResults {
+            get => _searchResults != null && _searchResults.Length > 0;
         }
 
-        private DBAccessor dbAccessor;
-        public DBSearch dbSearch;
+        private DBAccessor _accessor;
+        private Searcher _searcher;
+        public Searcher Searcher {get => _searcher;}
 
-        private Dictionary<int, Image> loadedThumbnails;
+        private Dictionary<int, Image> _loadedThumbnails;
 
         public SearchWindow() : base("Yumu search", 300, 400)
         {
-            dbAccessor = new DBAccessor();
-            dbSearch = new DBSearch(dbAccessor);
+            _accessor = new DBAccessor();
+            _searcher = new Searcher(_accessor);
 
-            loadedThumbnails = new Dictionary<int, Image>();
-            searchResults = new SearchResult[0];
+            _loadedThumbnails = new Dictionary<int, Image>();
+            _searchResults = new SearchResult[0];
 
             InitializeComponents();
         }
@@ -53,31 +54,31 @@ namespace Yumu
         {
             Activated += OnActivate;
 
-            searchBar = new TextBox(){
+            _searchBar = new TextBox(){
                 Location = new Point(X_MARGIN, Y_MARGIN),
                 Size = new Size(ClientSize.Width - X_MARGIN * 2, ClientSize.Height - Y_MARGIN * 2),
                 Font = new Font(FONT_NAME, 12, FontStyle.Bold),
             };
-            searchBar.TextChanged += OnTextChange;
-            Controls.Add(searchBar);
+            _searchBar.TextChanged += OnTextChange;
+            Controls.Add(_searchBar);
 
-            ActiveControl = searchBar;
+            ActiveControl = _searchBar;
 
-            int yPos = Y_MARGIN * 2 + searchBar.PreferredHeight;
+            int yPos = Y_MARGIN * 2 + _searchBar.PreferredHeight;
             int ySize = ClientRectangle.Height - yPos;
-            resultPanel = new Panel(){
+            _resultPanel = new Panel(){
                 Location = new Point(X_MARGIN, yPos),
                 Size = new Size(ClientSize.Width - X_MARGIN * 2, ySize),
                 AutoScroll = true
             };
-            Controls.Add(resultPanel);
+            Controls.Add(_resultPanel);
         }
 
         private void OnActivate(object sender, EventArgs e)
         {
-            if(searchBar.Text.Length > 0){
-                searchBar.SelectionStart = 0;
-                searchBar.SelectionLength = searchBar.Text.Length;
+            if(_searchBar.Text.Length > 0){
+                _searchBar.SelectionStart = 0;
+                _searchBar.SelectionLength = _searchBar.Text.Length;
             }
         }
 
@@ -89,20 +90,20 @@ namespace Yumu
             {
                 case Keys.Up:
                     e.Handled = true;
-                    SelectResult(selectedIndex - 1);
+                    SelectResult(_selectedIndex - 1);
                     break;
 
                 case Keys.Down:
                     e.Handled = true;
-                    SelectResult(selectedIndex + 1);
+                    SelectResult(_selectedIndex + 1);
                     break;
                 
                 case Keys.Enter:
                     e.Handled = true;
                     e.SuppressKeyPress = true;
-                    if(!HasResults)
+                    if(!hasResults)
                         break;
-                    SearchResult selection = searchResults[selectedIndex];
+                    SearchResult selection = _searchResults[_selectedIndex];
                     selection.CopyToClipboard();
                     selection.UpdateImageUsage();
                     Close();
@@ -117,40 +118,40 @@ namespace Yumu
 
         private void SelectResult(int newIndex)
         {
-            if(!HasResults) return;
+            if(!hasResults) return;
             
-            if(newIndex >= 0 && newIndex < searchResults.Length){
-                if(selectedIndex < searchResults.Length)
-                    searchResults[selectedIndex].Selected = false;
+            if(newIndex >= 0 && newIndex < _searchResults.Length){
+                if(_selectedIndex < _searchResults.Length)
+                    _searchResults[_selectedIndex].Selected = false;
                 
-                selectedIndex = newIndex;
+                _selectedIndex = newIndex;
                 
-                SearchResult selection = searchResults[selectedIndex];
+                SearchResult selection = _searchResults[_selectedIndex];
                 selection.Selected = true;
-                resultPanel.ScrollControlIntoView(selection);
+                _resultPanel.ScrollControlIntoView(selection);
             }
         }
 
         private void ClearSearchResults()
         {
-            if(HasResults){
-                foreach(SearchResult item in searchResults){
-                    resultPanel.Controls.Remove(item); // item.Dispose();
+            if(hasResults){
+                foreach(SearchResult item in _searchResults){
+                    _resultPanel.Controls.Remove(item); // item.Dispose();
                 }
             }
         }
 
         private void BuildSearchResults()
         {
-            ReferencedImage[] results = dbSearch.Results;
+            ReferencedImage[] results = _searcher.Results;
             
-            searchResults = new SearchResult[results.Length];
-            for(int i = 0; i < searchResults.Length; i++){
-                searchResults[i] = new SearchResult(this, results[i], i);
+            _searchResults = new SearchResult[results.Length];
+            for(int i = 0; i < _searchResults.Length; i++){
+                _searchResults[i] = new SearchResult(this, results[i], i);
             }
 
-            if(resultPanel.VerticalScroll.Visible){
-                foreach(SearchResult item in searchResults){
+            if(_resultPanel.VerticalScroll.Visible){
+                foreach(SearchResult item in _searchResults){
                     item.Width -= SystemInformation.VerticalScrollBarWidth;
                 }
             }
@@ -158,7 +159,7 @@ namespace Yumu
 
         private void OnTextChange(object sender, EventArgs e)
         {
-            bool haveSameResults = dbSearch.Search(searchBar.Text);
+            bool haveSameResults = _searcher.Search(_searchBar.Text);
 
             if(!haveSameResults) {
                 StopLoadingPreviews();
@@ -171,39 +172,39 @@ namespace Yumu
 
         private async void StartLoadingPreviews()
         {
-            if(!HasResults) return;
+            if(!hasResults) return;
 
-            if(tokenSource != null) {
-                while(!tokenSource.IsCancellationRequested) { }
+            if(_tokenSource != null) {
+                while(!_tokenSource.IsCancellationRequested) { }
             }
-            tokenSource = new CancellationTokenSource();
-            await Task.Run(() => LoadImagePreviews(tokenSource.Token));
+            _tokenSource = new CancellationTokenSource();
+            await Task.Run(() => LoadImagePreviews(_tokenSource.Token));
 
-            foreach(SearchResult item in searchResults){
+            foreach(SearchResult item in _searchResults){
                 item.AddImagePreview();
             }
         }
 
         private void StopLoadingPreviews()
         {
-            if(tokenSource != null) {
-                tokenSource.Cancel();
+            if(_tokenSource != null) {
+                _tokenSource.Cancel();
             }
         }
 
         private void LoadImagePreviews(CancellationToken token)
         {
-            foreach(SearchResult result in searchResults){
+            foreach(SearchResult result in _searchResults){
                 if(token.IsCancellationRequested){
                     return;
                 }
                 
-                int imgId = result.attachedImage.Id;
-                if(loadedThumbnails.ContainsKey(imgId)) {
-                    result.AttachImagePreview(loadedThumbnails[imgId]);
+                int imgId = result.AttachedImage.Id;
+                if(_loadedThumbnails.ContainsKey(imgId)) {
+                    result.AttachImagePreview(_loadedThumbnails[imgId]);
                 } else {
                     Image thumb = result.LoadImagePreview();
-                    loadedThumbnails.Add(imgId, thumb);
+                    _loadedThumbnails.Add(imgId, thumb);
                 }
             }
         }

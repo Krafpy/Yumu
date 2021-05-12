@@ -13,38 +13,38 @@ namespace Yumu
 
         private const int DIR_MAX_LENGTH = 25;
 
-        private DirectoryManager directoryManager;
-        private ReferencedDirectory attachedDirectory;
-        private int order;
+        private DirectoryManager _directoryManager;
+        private ReferencedDirectory _attachedDirectory;
+        private int _order;
 
-        private DBAccessor dbAccessor;
+        private DBAccessor _accessor;
 
         public DirectoryControl(DirectoryManager directoryManager, ReferencedDirectory dir, int order) : base(directoryManager.DirsPanel)
         {
-            this.directoryManager = directoryManager;
-            this.attachedDirectory = dir;
-            this.order = order;
+            _directoryManager = directoryManager;
+            _attachedDirectory = dir;
+            _order = order;
 
-            dbAccessor = this.directoryManager.dbAccessor;
+            _accessor = _directoryManager._accessor;
 
             InitializeComponents();
         }
 
         private void InitializeComponents()
         {
-            Location = new Point(0, order * ROW_HEIGHT);
-            Size = new Size(parent.Width, ROW_HEIGHT);
+            Location = new Point(0, _order * ROW_HEIGHT);
+            Size = new Size(_parent.Width, ROW_HEIGHT);
 
             DoubleClick += OnClick;
             
             // Get the title labels (for location match)
-            Label imgTitle = directoryManager.ImgLabel;
-            Label btnTitle = directoryManager.BtnLabel;
+            Label imgTitle = _directoryManager.ImgLabel;
+            Label btnTitle = _directoryManager.BtnLabel;
 
             // Limit numbers of characters in the directory display name 
-            string displayName = attachedDirectory.Name;
+            string displayName = _attachedDirectory.Name;
             if(displayName.Length > DIR_MAX_LENGTH)
-                displayName = attachedDirectory.Name.Substring(0, DIR_MAX_LENGTH) + "...";
+                displayName = _attachedDirectory.Name.Substring(0, DIR_MAX_LENGTH) + "...";
 
             // Directory name
             Label dirLab = new Label(){
@@ -65,12 +65,12 @@ namespace Yumu
 
             // Image count label
             Label imgLab = new Label(){
-                Text = attachedDirectory.ImageCount.ToString(),
+                Text = _attachedDirectory.ImageCount.ToString(),
                 Font = new Font(Window.FONT_NAME, 10),
                 AutoSize = true,
                 TextAlign = ContentAlignment.MiddleCenter
             };
-            imgLab.ForeColor = attachedDirectory.ImageCount > 0 ? Color.Black : Color.Red;
+            imgLab.ForeColor = _attachedDirectory.ImageCount > 0 ? Color.Black : Color.Red;
             x = imgTitle.Location.X + imgTitle.PreferredWidth /2 - imgLab.PreferredWidth / 2;
             y = ROW_HEIGHT / 2 - imgLab.Height / 2;
             imgLab.Location = new Point(x, y);
@@ -129,20 +129,20 @@ namespace Yumu
 
         private void OnDelBtnClick(object sender, EventArgs e)
         {
-            dbAccessor.RemoveReferencedDirectory(attachedDirectory.Id);
-            directoryManager.BuildDirectoryList();
+            _accessor.RemoveReferencedDirectory(_attachedDirectory.Id);
+            _directoryManager.BuildDirectoryList();
         }
 
         private void OnRelBtnClick(object sender, EventArgs e)
         {
-            dbAccessor.UpdateReferencedDirectory(attachedDirectory.Id);
-            directoryManager.BuildDirectoryList();
+            _accessor.UpdateReferencedDirectory(_attachedDirectory.Id);
+            _directoryManager.BuildDirectoryList();
         }
 
         private void OnClick(object sender, EventArgs e)
         {
             ProcessStartInfo startInfo = 
-            new ProcessStartInfo("explorer.exe", attachedDirectory.FullPath);
+            new ProcessStartInfo("explorer.exe", _attachedDirectory.FullPath);
             Process.Start(startInfo);
         }
     }
