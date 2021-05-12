@@ -1,13 +1,10 @@
-using System.Text.RegularExpressions;
 using System.IO;
 using System.Text;
 
 namespace Yumu
 {
-    class ReferencedImage : DBItem
+    class DBImage : DBItem
     {
-        public static string DataFile => "./imgs.dat";
-
         private int _dirId;
         public int DirId {get => _dirId;}
 
@@ -40,7 +37,7 @@ namespace Yumu
             get => Path.GetFileNameWithoutExtension(_fileName);
         }
 
-        public ReferencedImage(int dirId, string fileName) : base()
+        public DBImage(int dirId, string fileName) : base()
         {
             _dirId = dirId;
             _fileName = fileName;
@@ -48,7 +45,7 @@ namespace Yumu
             CreateSearchName();
         }
 
-        public ReferencedImage() : base() {}
+        public DBImage() : base() {}
 
         private void CreateSearchName()
         {
@@ -93,8 +90,11 @@ namespace Yumu
 
         public static string SimplifyString(string str)
         {
-            string newStr = Regex.Replace(str, @"\s+", "");
-            newStr = newStr.ToLower();
+            string newStr = "";
+            foreach(char c in str.ToLower()) {
+                if(char.IsLetterOrDigit(c))
+                    newStr += c;
+            }
             return newStr;
         }
     }

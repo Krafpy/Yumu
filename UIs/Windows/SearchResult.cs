@@ -15,7 +15,7 @@ namespace Yumu
 
         private const int TITLE_LENGTH_LIMIT = 20;
 
-        public ReferencedImage AttachedImage;
+        public DBImage AttachedImage;
         private SearchWindow _searchWindow;
         private int _order;
 
@@ -37,7 +37,7 @@ namespace Yumu
         private Searcher _searcher;
         private DBAccessor _accessor;
 
-        public SearchResult(SearchWindow searchWindow, ReferencedImage attachedImage, int order) : base(searchWindow.ResultPanel)
+        public SearchResult(SearchWindow searchWindow, DBImage attachedImage, int order) : base(searchWindow.ResultPanel)
         {
             _searchWindow = searchWindow;
             AttachedImage = attachedImage;
@@ -159,7 +159,7 @@ namespace Yumu
             CreatePreviewBox(thumb, posX, posY, sizeX, sizeY);
         }
 
-        private static (int posX, int posY) AdaptedImageLocation(Image img, int sizeX, int sizeY)
+        private static (int, int) AdaptedImageLocation(Image img, int sizeX, int sizeY)
         {
             int posX = 0;
             int posY = 0;
@@ -202,7 +202,6 @@ namespace Yumu
         {
             if(!_imageWasUsed){
                 _imageWasUsed = true;
-                AttachedImage.Usage++;
                 _accessor.UpdateReferencedImage(AttachedImage.Id);
             }
         }

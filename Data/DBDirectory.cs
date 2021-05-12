@@ -6,10 +6,8 @@ using System;
 
 namespace Yumu
 {
-    class ReferencedDirectory : DBItem
-    {
-        public static string DataFile => "./dirs.dat";
-        
+    class DBDirectory : DBItem
+    {   
         private string _fullPath;
         public string FullPath {
             get => _fullPath;
@@ -26,15 +24,12 @@ namespace Yumu
             get => Path.GetFileName(_fullPath);
         }
 
-        private ReferencedImage[] _images;
-        public ReferencedImage[] Images {get => _images;}
-
-        public ReferencedDirectory(string path) : base()
+        public DBDirectory(string path) : base()
         {
             _fullPath = path;
         }
 
-        public ReferencedDirectory() : base() { }
+        public DBDirectory() : base() { }
 
         public override byte[] ToDataRow()
         {
@@ -62,20 +57,20 @@ namespace Yumu
             _imageCount = imageCount;
         }
 
-        public void LookupImageFiles()
+        public List<DBImage> LookupImageFiles()
         {
             string[] imageFiles = GetAllImageFiles();
-            List<ReferencedImage> imgs = new List<ReferencedImage>();
+            List<DBImage> imgs = new List<DBImage>();
             foreach(string imageFile in imageFiles){
                 string fileName = Path.GetFileName(imageFile);
-                ReferencedImage img = new ReferencedImage(_id, fileName);
+                DBImage img = new DBImage(_id, fileName);
                 if(img.IsValid) {
                     imgs.Add(img);
                 }
             }
-
-            _images = imgs.ToArray();
             _imageCount = imgs.Count;
+
+            return imgs;
         }
 
         private string[] GetAllImageFiles()

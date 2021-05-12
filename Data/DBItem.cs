@@ -8,13 +8,6 @@ namespace Yumu
             set => _id = value;
         }
 
-        protected DBItem(int id)
-        {
-            _id = id;
-        }
-
-        protected DBItem() { }
-
         public abstract byte[] ToDataRow();
         public abstract void FromDataRow(byte[] data);
     }

@@ -191,7 +191,7 @@ namespace Yumu
 
         private void AppendNewDirectory(string path)
         {
-            ReferencedDirectory dir = new ReferencedDirectory(path);
+            DBDirectory dir = new DBDirectory(path);
             _accessor.AppendDirectoryReference(dir);
         }
     }

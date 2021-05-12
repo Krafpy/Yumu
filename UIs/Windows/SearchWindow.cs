@@ -143,9 +143,9 @@ namespace Yumu
 
         private void BuildSearchResults()
         {
-            ReferencedImage[] results = _searcher.Results;
+            List<DBImage> results = _searcher.Results;
             
-            _searchResults = new SearchResult[results.Length];
+            _searchResults = new SearchResult[results.Count];
             for(int i = 0; i < _searchResults.Length; i++){
                 _searchResults[i] = new SearchResult(this, results[i], i);
             }
@@ -159,9 +159,9 @@ namespace Yumu
 
         private void OnTextChange(object sender, EventArgs e)
         {
-            bool haveSameResults = _searcher.Search(_searchBar.Text);
+            _searcher.Search(_searchBar.Text);
 
-            if(!haveSameResults) {
+            if(!_searcher.AreNewResultsSame()) {
                 StopLoadingPreviews();
                 ClearSearchResults();
                 BuildSearchResults();
