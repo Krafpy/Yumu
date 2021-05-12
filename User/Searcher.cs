@@ -54,6 +54,7 @@ namespace Yumu
             found = found.OrderByDescending(img => img.Usage).ToList();
             
             _cache = found;
+            
             int numResults = Math.Min(found.Count, MAX_RESULTS);
             _results = found.GetRange(0, numResults);
             
