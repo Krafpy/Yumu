@@ -18,7 +18,7 @@ namespace Yumu
             // Create data files (for directory and image referencing)
             // Files are only created if they don't exist
             DB.CreateDataFiles(new string[] {
-                DBAccessor.DIRS_DB_FILE, DBAccessor.DIRS_DB_FILE
+                DBAccessor.IMGS_DB_FILE, DBAccessor.DIRS_DB_FILE
             });
 
             // Initialize Tray Icon
