@@ -29,11 +29,11 @@ namespace Yumu
             get => _selected;
             set {
                 _selected = value;
-                BackColor = _selected ? hoverBackground : defaultBackground;
+                BackColor = _selected ? _hoverBackground : _defaultBackground;
             }
         }
 
-        private string imagePath;
+        private string _imagePath;
 
         private Searcher _searcher;
         private DBAccessor _accessor;
@@ -47,14 +47,14 @@ namespace Yumu
             _searcher = _searchWindow.Searcher;
             _accessor = _searcher.Accessor;
 
-            imagePath = _searcher.GetImageFullPath(AttachedImage);
+            _imagePath = _searcher.GetImageFullPath(AttachedImage);
 
             InitializeComponents();
         }
 
         private void InitializeComponents()
         {    
-            Size = new Size(parent.Width, ROW_HEIGHT);
+            Size = new Size(_parent.Width, ROW_HEIGHT);
             Location = new Point(0, _order * (ROW_HEIGHT + SEPARATION));
             
             MouseDown += OnMouseDown;
@@ -92,10 +92,10 @@ namespace Yumu
 
         private void OnMouseDown(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Left && e.Clicks == 1 && File.Exists(imagePath))
+            if (e.Button == MouseButtons.Left && e.Clicks == 1 && File.Exists(_imagePath))
             {
                 DataObject data = new DataObject();
-                string[] file = {imagePath};
+                string[] file = {_imagePath};
                 data.SetData(DataFormats.FileDrop, file);
                 DragDropEffects effect = DoDragDrop(data, DragDropEffects.Copy);
                 if(effect != DragDropEffects.None){ // We consider that the user used the image if he dropped it
@@ -118,10 +118,10 @@ namespace Yumu
 
         public Image LoadImagePreview()
         {
-            if(!File.Exists(imagePath))
+            if(!File.Exists(_imagePath))
                 return null;
 
-            FileInfo imgFile = new FileInfo(imagePath);
+            FileInfo imgFile = new FileInfo(_imagePath);
             if(imgFile.Length > FILE_SIZE_LIMIT)
                 return null;
             
@@ -195,8 +195,8 @@ namespace Yumu
 
         public void CopyToClipboard()
         {
-            if(File.Exists(imagePath))
-                ImageUtils.CopyToClipboard(imagePath);
+            if(File.Exists(_imagePath))
+                ImageUtils.CopyToClipboard(_imagePath);
         }
 
         public void UpdateImageUsage()

@@ -6,22 +6,22 @@ namespace Yumu
     /// <summary>A hidden process to handle the global hotkey detection.</summary>
     class BackgroundHandler : NativeWindow
     {
-        private static IntPtr currentHandle;
-        public static IntPtr CurrentHandle {get => currentHandle;}
+        private static IntPtr s_currentHandle;
+        public static IntPtr CurrentHandle {get => s_currentHandle;}
 
         public BackgroundHandler()
         {
             CreateHandle(new CreateParams());
             Application.ApplicationExit += new EventHandler(OnApplicationExit);
 
-            currentHandle = Handle;
+            s_currentHandle = Handle;
         }
 
         private void OnApplicationExit(object sender, EventArgs e)
         {
             DestroyHandle();
 
-            currentHandle = IntPtr.Zero;
+            s_currentHandle = IntPtr.Zero;
         }
     }
 }

@@ -8,10 +8,10 @@ namespace Yumu
     {
         private const string HK_FILE = "./hotkey.hk";
 
-        private Hotkey hk;
-        private BackgroundHandler hkHandler;
+        private Hotkey _hk;
+        private BackgroundHandler _hkHandler;
 
-        private NotifyIcon trayIcon;
+        private NotifyIcon _trayIcon;
 
         public Context()
         {
@@ -22,7 +22,7 @@ namespace Yumu
             });
 
             // Initialize Tray Icon
-            trayIcon = new NotifyIcon()
+            _trayIcon = new NotifyIcon()
             {
                 Icon = SystemIcons.Application,
                 ContextMenu = new ContextMenu(new MenuItem[] {
@@ -34,18 +34,18 @@ namespace Yumu
                 Visible = true,
                 Text = "Yumu image searcher"
             };
-            trayIcon.DoubleClick += OpenDirectoryManager;
+            _trayIcon.DoubleClick += OpenDirectoryManager;
 
             // Initialize hotkey detection
-            hk = new Hotkey(Keys.F9, false, false, false, false); // Default hotkey
-            hk.Pressed += OpenSearch;
-            if(!hk.Load(HK_FILE))
-                hk.Save(HK_FILE);
+            _hk = new Hotkey(Keys.F9, false, false, false, false); // Default hotkey
+            _hk.Pressed += OpenSearch;
+            if(!_hk.Load(HK_FILE))
+                _hk.Save(HK_FILE);
             
-            hkHandler = new BackgroundHandler();
-            IntPtr handle = hkHandler.Handle;
-            if(hk.GetCanRegister(handle)){
-                hk.Register(handle);
+            _hkHandler = new BackgroundHandler();
+            IntPtr handle = _hkHandler.Handle;
+            if(_hk.GetCanRegister(handle)){
+                _hk.Register(handle);
             } else {
                 string message = "Cannot register the hotkey, change it in the configuration.";
                 string caption = "Yumu Hotkey Error";
@@ -56,15 +56,15 @@ namespace Yumu
         private void Exit(object sender, EventArgs e)
         {
             // Hide tray icon, otherwise it will remain shown until user mouses over it
-            trayIcon.Visible = false;
-            hk.Unregister();
+            _trayIcon.Visible = false;
+            _hk.Unregister();
             Application.Exit();
         }
 
         private void OpenHotkeyEditor(object sender, EventArgs e)
         {
             if(!Window.Opened){
-                HotkeyEditor hkEditor = new HotkeyEditor(hk, HK_FILE);
+                HotkeyEditor hkEditor = new HotkeyEditor(_hk, HK_FILE);
                 hkEditor.Show();
             }
             Window.Current.Activate();

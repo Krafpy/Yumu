@@ -7,17 +7,17 @@ namespace Yumu
     /// <summary>Represents a hoverable element of a list in a window.</summary>
     class ListItem : Panel
     {
-        protected Panel parent;
+        protected Panel _parent;
 
-        protected Color defaultBackground;
-        protected Color hoverBackground;
+        protected Color _defaultBackground;
+        protected Color _hoverBackground;
 
         public ListItem(Panel parent)
         {
-            this.parent = parent;
+            _parent = parent;
 
-            defaultBackground = parent.BackColor;
-            hoverBackground = Color.FromArgb(190, 210, 210);
+            _defaultBackground = parent.BackColor;
+            _hoverBackground = Color.FromArgb(190, 210, 210);
 
             MouseEnter += OnEnter;
             MouseLeave += OnLeave;
@@ -28,12 +28,12 @@ namespace Yumu
 
         protected virtual void OnEnter(object sender, EventArgs e)
         {
-            BackColor = hoverBackground;
+            BackColor = _hoverBackground;
         }
 
         protected virtual void OnLeave(object sender, EventArgs e)
         {
-            BackColor = defaultBackground;
+            BackColor = _defaultBackground;
         }
 
         protected virtual void OnRemove(object sender, EventArgs e)

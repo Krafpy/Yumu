@@ -13,25 +13,25 @@ namespace Yumu
         public const int RIGHT_OFFSET = 15;
         public const int BAR_HEIGHT = 30;
 
-        private DirectoryControl[] dirControls;
-        private Panel dirsPanel;
+        private DirectoryControl[] _dirControls;
+        private Panel _dirsPanel;
 
         // Title label above directories caracteristics
-        private Label dirLabel; // Directory name
-        private Label imgLabel; // Image count
-        private Label btnLabel; // Action buttons
+        private Label _dirLabel; // Directory name
+        private Label _imgLabel; // Image count
+        private Label _btnLabel; // Action buttons
 
-        public Label DirLabel {get => dirLabel;}
-        public Label ImgLabel {get => imgLabel;}
-        public Label BtnLabel {get => btnLabel;}
+        public Label DirLabel {get => _dirLabel;}
+        public Label ImgLabel {get => _imgLabel;}
+        public Label BtnLabel {get => _btnLabel;}
 
-        public Panel DirsPanel {get => dirsPanel;}
+        public Panel DirsPanel {get => _dirsPanel;}
 
-        public DBAccessor dbAccessor;
+        public DBAccessor _accessor;
 
         public DirectoryManager() : base("Yumu directories", 500, 400)
         {
-            dbAccessor = new DBAccessor();
+            _accessor = new DBAccessor();
             InitializeComponents();
         }
 
@@ -68,45 +68,45 @@ namespace Yumu
             Font labFont = new Font(FONT_NAME, 10, FontStyle.Bold);
 
             // The directory name/path
-            dirLabel = new Label(){
+            _dirLabel = new Label(){
                 Text = "Directory",
                 ForeColor = labCol,
                 Font = labFont,
                 Location = new Point(LEFT_OFFSET, BAR_HEIGHT)
             };
-            Controls.Add(dirLabel);
+            Controls.Add(_dirLabel);
 
             // The control buttons for a directory
-            btnLabel = new Label(){
+            _btnLabel = new Label(){
                 Text = "Reload / Remove",
                 ForeColor = labCol,
                 Font = labFont,
                 AutoSize = true,
             };
-            int x = ClientSize.Width - btnLabel.PreferredWidth - RIGHT_OFFSET;
+            int x = ClientSize.Width - _btnLabel.PreferredWidth - RIGHT_OFFSET;
             int y = BAR_HEIGHT;
-            btnLabel.Location = new Point(x, y);
-            Controls.Add(btnLabel);
+            _btnLabel.Location = new Point(x, y);
+            Controls.Add(_btnLabel);
 
             // The number of referenced images in a directory
-            imgLabel = new Label(){
+            _imgLabel = new Label(){
                 Text = "Images",
                 ForeColor = labCol,
                 Font = labFont,
                 AutoSize = true,
             };
-            x = btnLabel.Location.X - imgLabel.PreferredWidth - 50;
-            imgLabel.Location = new Point(x, y);
-            Controls.Add(imgLabel);
+            x = _btnLabel.Location.X - _imgLabel.PreferredWidth - 50;
+            _imgLabel.Location = new Point(x, y);
+            Controls.Add(_imgLabel);
 
             // Panel which will contain the directory list
-            dirsPanel = new Panel(){
-                Location = new Point(0, BAR_HEIGHT + dirLabel.Height),
-                Size = new Size(ClientSize.Width, ClientSize.Height - BAR_HEIGHT - dirLabel.Height),
+            _dirsPanel = new Panel(){
+                Location = new Point(0, BAR_HEIGHT + _dirLabel.Height),
+                Size = new Size(ClientSize.Width, ClientSize.Height - BAR_HEIGHT - _dirLabel.Height),
                 AutoScroll = true
             };
-            dirsPanel.BorderStyle = BorderStyle.None;
-            Controls.Add(dirsPanel);
+            _dirsPanel.BorderStyle = BorderStyle.None;
+            Controls.Add(_dirsPanel);
 
             BuildDirectoryList();
         }
@@ -153,17 +153,17 @@ namespace Yumu
         {
             ClearDirectoryList();
 
-            dirControls = new DirectoryControl[dbAccessor.Directories.Count];
-            for(int i = 0; i < dirControls.Length; i++){
-                dirControls[i] = new DirectoryControl(this, dbAccessor.Directories[i], i);
+            _dirControls = new DirectoryControl[_accessor.Directories.Count];
+            for(int i = 0; i < _dirControls.Length; i++){
+                _dirControls[i] = new DirectoryControl(this, _accessor.Directories[i], i);
             }
         }
 
         private void ClearDirectoryList()
         {
-            if(dirControls != null){
-                foreach(DirectoryControl dirControl in dirControls)
-                    dirsPanel.Controls.Remove(dirControl);
+            if(_dirControls != null){
+                foreach(DirectoryControl dirControl in _dirControls)
+                    _dirsPanel.Controls.Remove(dirControl);
             }
         }
 
@@ -193,7 +193,7 @@ namespace Yumu
         private void AppendNewDirectory(string path)
         {
             ReferencedDirectory dir = new ReferencedDirectory(path);
-            dbAccessor.AppendDirectoryReference(dir);
+            _accessor.AppendDirectoryReference(dir);
         }
     }
 }

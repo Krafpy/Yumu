@@ -7,6 +7,9 @@ namespace Yumu
 {
     class Searcher
     {
+        private const int MIN_SEARCH_LENGTH = 3;
+        private const int MAX_RESULTS = 20;
+        
         private DBAccessor _accessor;
         public DBAccessor Accessor {get => _accessor;}
         
@@ -17,9 +20,6 @@ namespace Yumu
         private ReferencedImage[] _cache;
 
         private string _prevSearchString;
-
-        private const int MIN_SEARCH_LENGTH = 3;
-        private const int MAX_RESULTS = 20;
 
         public Searcher(DBAccessor accessor)
         {
