@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using System.IO;
 using System.Text;
 
@@ -91,8 +90,11 @@ namespace Yumu
 
         public static string SimplifyString(string str)
         {
-            string newStr = Regex.Replace(str, @"\s+", "");
-            newStr = newStr.ToLower();
+            string newStr = "";
+            foreach(char c in str.ToLower()) {
+                if(char.IsLetterOrDigit(c))
+                    newStr += c;
+            }
             return newStr;
         }
     }
