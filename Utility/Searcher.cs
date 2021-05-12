@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using System.IO;
 
 namespace Yumu
 {
@@ -9,7 +8,7 @@ namespace Yumu
     {
         private const int MIN_SEARCH_LENGTH = 3;
         private const int MAX_RESULTS = 20;
-        
+
         private DBAccessor _accessor;
         public DBAccessor Accessor {get => _accessor;}
         
