@@ -8,16 +8,16 @@ namespace Yumu
     {
         public const string FONT_NAME = "Microsoft PhagsPa";
 
-        private static bool _opened = false;
-        private static Window _current;
+        private static bool s_opened = false;
+        private static Window s_current;
 
-        public static bool Opened { get => _opened; }
-        public static Window Current {get => _current;}
+        public static bool Opened { get => s_opened; }
+        public static Window Current {get => s_current;}
 
         public Window(string title, int width, int height)
         {
-            _current = this;
-            _opened = true;
+            s_current = this;
+            s_opened = true;
 
             Text = title;
             ClientSize = new Size(width, height);
@@ -41,7 +41,8 @@ namespace Yumu
 
         protected virtual void OnFormClose(object sender, FormClosedEventArgs e)
         {
-            _opened = false;
+            s_opened = false;
+            s_current = null;
         }
     }    
 }

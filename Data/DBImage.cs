@@ -4,10 +4,8 @@ using System.Text;
 
 namespace Yumu
 {
-    class ReferencedImage : DBItem
+    class DBImage : DBItem
     {
-        public static string DataFile => "./imgs.dat";
-
         private int _dirId;
         public int DirId {get => _dirId;}
 
@@ -40,7 +38,7 @@ namespace Yumu
             get => Path.GetFileNameWithoutExtension(_fileName);
         }
 
-        public ReferencedImage(int dirId, string fileName) : base()
+        public DBImage(int dirId, string fileName) : base()
         {
             _dirId = dirId;
             _fileName = fileName;
@@ -48,7 +46,7 @@ namespace Yumu
             CreateSearchName();
         }
 
-        public ReferencedImage() : base() {}
+        public DBImage() : base() {}
 
         private void CreateSearchName()
         {

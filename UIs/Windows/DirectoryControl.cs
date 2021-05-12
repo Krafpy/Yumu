@@ -14,12 +14,12 @@ namespace Yumu
         private const int DIR_MAX_LENGTH = 25;
 
         private DirectoryManager _directoryManager;
-        private ReferencedDirectory _attachedDirectory;
+        private DBDirectory _attachedDirectory;
         private int _order;
 
         private DBAccessor _accessor;
 
-        public DirectoryControl(DirectoryManager directoryManager, ReferencedDirectory dir, int order) : base(directoryManager.DirsPanel)
+        public DirectoryControl(DirectoryManager directoryManager, DBDirectory dir, int order) : base(directoryManager.DirsPanel)
         {
             _directoryManager = directoryManager;
             _attachedDirectory = dir;
