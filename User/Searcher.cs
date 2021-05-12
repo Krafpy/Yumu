@@ -43,16 +43,12 @@ namespace Yumu
                 return;
             }
 
-            List<DBImage> found;
-
             bool searchInCache = _prevSearchString != null &&
                 searchString.Length > _prevSearchString.Length &&
                 searchString.Substring(0, _prevSearchString.Length) == _prevSearchString;
-
-            if(searchInCache)
-                found = Find(_cache, searchString);
-            else
-                found = Find(_accessor.Images, searchString);
+            
+            List<DBImage> found = searchInCache ? 
+            Find(_cache, searchString) : Find(_accessor.Images, searchString);
 
             found = found.OrderBy(img => img.DisplayName).ToList();
             found = found.OrderByDescending(img => img.Usage).ToList();
