@@ -1,5 +1,8 @@
 using System;
 using System.Text;
+using System.Runtime.InteropServices;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.IO;
 
 namespace Yumu
 {
@@ -48,6 +51,32 @@ namespace Yumu
 			return BitConverter.ToInt32(bytes, 0);
         }
 
+        public static void WriteIntToByteArray(Byte[] data, Int32 startIndex, Int32 bytes, Boolean littleEndian, UInt32 value)
+        {
+            Int32 lastByte = bytes - 1;
+            if (data.Length < startIndex + bytes)
+                throw new ArgumentOutOfRangeException("startIndex", "Data array is too small to write a " + bytes + "-byte value at offset " + startIndex + ".");
+            for (Int32 index = 0; index < bytes; index++)
+            {
+                Int32 offs = startIndex + (littleEndian ? index : lastByte - index);
+                data[offs] = (Byte)(value >> (8 * index) & 0xFF);
+            }
+        }
+
+        public static UInt32 ReadIntFromByteArray(Byte[] data, Int32 startIndex, Int32 bytes, Boolean littleEndian)
+        {
+            Int32 lastByte = bytes - 1;
+            if (data.Length < startIndex + bytes)
+                throw new ArgumentOutOfRangeException("startIndex", "Data array is too small to read a " + bytes + "-byte value at offset " + startIndex + ".");
+            UInt32 value = 0;
+            for (Int32 index = 0; index < bytes; index++)
+            {
+                Int32 offs = startIndex + (littleEndian ? index : lastByte - index);
+                value += (UInt32)(data[offs] << (8 * index));
+            }
+            return value;
+        }
+
         /// <summary>Writes a string bytes into an array.</summary>
         /// <param name="data">the array where to write the string.</param>
         /// <param name="byteIndex">index where to start writing the string bytes in the array.</param>
@@ -71,7 +100,7 @@ namespace Yumu
             return Encoding.UTF8.GetString(data, startIndex, bytesCount);
         }
 
-        /*/// <summary>Converts any object into its byte array.</summary>
+        /// <summary>Converts any object into its byte array.</summary>
         /// <param name="obj">the object to convert.</param>
         public static byte[] ObjectToByteArray(object obj)
         {
@@ -100,6 +129,6 @@ namespace Yumu
                 handle.Free();
             }
             return stuff;
-        }*/
+        }
     }
 }
