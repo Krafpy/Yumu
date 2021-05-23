@@ -20,6 +20,7 @@ namespace Yumu
         private int _order;
 
         private PictureBox _preview;
+        public bool HasPreview {get => _preview != null;}
 
         private bool _imageWasUsed = false;
         
