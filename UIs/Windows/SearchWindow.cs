@@ -12,7 +12,7 @@ namespace Yumu
         private const int X_MARGIN = 10;
         private const int Y_MARGIN = 10;
 
-        private SearchResult[] _searchResults;
+        private List<SearchResult> _searchResults;
         
         private TextBox _searchBar;
         private Panel _resultPanel;
@@ -21,6 +21,7 @@ namespace Yumu
         public Panel ResultPanel {get => _resultPanel;}
 
         private CancellationTokenSource _tokenSource;
+        private Mutex _mutex;
 
         private int _selectedIndex;
         
@@ -30,7 +31,7 @@ namespace Yumu
         }
 
         private bool hasResults {
-            get => _searchResults != null && _searchResults.Length > 0;
+            get => _searchResults != null && _searchResults.Count > 0;
         }
 
         private DBAccessor _accessor;
@@ -45,7 +46,9 @@ namespace Yumu
             _searcher = new Searcher(_accessor);
 
             _loadedThumbnails = new Dictionary<int, Image>();
-            _searchResults = new SearchResult[0];
+            _searchResults = new List<SearchResult>();
+
+            _mutex = new Mutex();
 
             InitializeComponents();
         }
@@ -120,8 +123,8 @@ namespace Yumu
         {
             if(!hasResults) return;
             
-            if(newIndex >= 0 && newIndex < _searchResults.Length){
-                if(_selectedIndex < _searchResults.Length)
+            if(newIndex >= 0 && newIndex < _searchResults.Count){
+                if(_selectedIndex < _searchResults.Count)
                     _searchResults[_selectedIndex].Selected = false;
                 
                 _selectedIndex = newIndex;
@@ -135,19 +138,20 @@ namespace Yumu
         private void ClearSearchResults()
         {
             if(hasResults){
+                _resultPanel.Controls.Clear();
                 foreach(SearchResult item in _searchResults){
-                    _resultPanel.Controls.Remove(item); // item.Dispose();
+                    item.Dispose();
                 }
+               _searchResults.Clear();
             }
         }
 
         private void BuildSearchResults()
         {
             List<DBImage> results = _searcher.Results;
-            
-            _searchResults = new SearchResult[results.Count];
-            for(int i = 0; i < _searchResults.Length; i++){
-                _searchResults[i] = new SearchResult(this, results[i], i);
+
+            for(int i = 0; i < results.Count; i++){
+                _searchResults.Add(new SearchResult(this, results[i], i));
             }
 
             if(_resultPanel.VerticalScroll.Visible){
@@ -174,9 +178,6 @@ namespace Yumu
         {
             if(!hasResults) return;
 
-            if(_tokenSource != null) {
-                while(!_tokenSource.IsCancellationRequested) { }
-            }
             _tokenSource = new CancellationTokenSource();
             await Task.Run(() => LoadImagePreviews(_tokenSource.Token));
 
@@ -200,14 +201,21 @@ namespace Yumu
                 }
                 
                 int imgId = result.AttachedImage.Id;
+
+                _mutex.WaitOne();
+
                 if(_loadedThumbnails.ContainsKey(imgId)) {
-                    result.AttachImagePreview(_loadedThumbnails[imgId]);
+                    if(!result.HasPreview){
+                        result.AttachImagePreview(_loadedThumbnails[imgId]);
+                    }
                 } else {
                     Image thumb = result.LoadImagePreview();
-                    // Add mutex
-                    // check if image is not null
-                    _loadedThumbnails.Add(imgId, thumb);
+                    if(thumb != null){
+                        _loadedThumbnails.Add(imgId, thumb);
+                    }
                 }
+
+                _mutex.ReleaseMutex();
             }
         }
     }
