@@ -204,6 +204,8 @@ namespace Yumu
                     result.AttachImagePreview(_loadedThumbnails[imgId]);
                 } else {
                     Image thumb = result.LoadImagePreview();
+                    // Add mutex
+                    // check if image is not null
                     _loadedThumbnails.Add(imgId, thumb);
                 }
             }
