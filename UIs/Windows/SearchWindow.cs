@@ -93,12 +93,12 @@ namespace Yumu
             {
                 case Keys.Up:
                     e.Handled = true;
-                    SelectResult(_selectedIndex - 1);
+                    SelectedIndex--;
                     break;
 
                 case Keys.Down:
                     e.Handled = true;
-                    SelectResult(_selectedIndex + 1);
+                    SelectedIndex++;
                     break;
                 
                 case Keys.Enter:
@@ -164,7 +164,7 @@ namespace Yumu
         private void OnTextChange(object sender, EventArgs e)
         {
             _searcher.Search(_searchBar.Text);
-
+            
             if(!_searcher.AreNewResultsSame()) {
                 StopLoadingPreviews();
                 ClearSearchResults();
@@ -176,7 +176,7 @@ namespace Yumu
 
         private async void StartLoadingPreviews()
         {
-            if(!hasResults) return;
+            if(!_searcher.HasResults) return;
 
             _tokenSource = new CancellationTokenSource();
             await Task.Run(() => LoadImagePreviews(_tokenSource.Token));
@@ -199,11 +199,9 @@ namespace Yumu
                 if(token.IsCancellationRequested){
                     return;
                 }
-                
+
                 int imgId = result.AttachedImage.Id;
-
                 _mutex.WaitOne();
-
                 if(_loadedThumbnails.ContainsKey(imgId)) {
                     if(!result.HasPreview){
                         result.AttachImagePreview(_loadedThumbnails[imgId]);
@@ -214,7 +212,6 @@ namespace Yumu
                         _loadedThumbnails.Add(imgId, thumb);
                     }
                 }
-
                 _mutex.ReleaseMutex();
             }
         }

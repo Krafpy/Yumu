@@ -20,6 +20,10 @@ namespace Yumu
 
         private string _prevSearchString;
 
+        public bool HasResults {
+            get => _results.Count > 0;
+        }
+
         public Searcher(DBAccessor accessor)
         {
             _accessor = accessor;
