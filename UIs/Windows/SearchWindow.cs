@@ -1,9 +1,8 @@
 using System;
 using System.Windows.Forms;
 using System.Drawing;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace Yumu
 {
@@ -20,9 +19,6 @@ namespace Yumu
         public TextBox SearchBar {get => _searchBar;}
         public Panel ResultPanel {get => _resultPanel;}
 
-        private CancellationTokenSource _tokenSource;
-        private Mutex _mutex;
-
         private int _selectedIndex;
         
         public int SelectedIndex {
@@ -30,7 +26,7 @@ namespace Yumu
             set => SelectResult(value);
         }
 
-        private bool hasResults {
+        private bool HasResults {
             get => _searchResults != null && _searchResults.Count > 0;
         }
 
@@ -38,17 +34,18 @@ namespace Yumu
         private Searcher _searcher;
         public Searcher Searcher {get => _searcher;}
 
-        private Dictionary<int, Image> _loadedThumbnails;
+        private PreviewsLoader _previewsLoader;
+        private SemaphoreSlim _semaphore;
 
         public SearchWindow() : base("Yumu search", 300, 400)
         {
+            _searchResults = new List<SearchResult>();
+            
             _accessor = new DBAccessor();
             _searcher = new Searcher(_accessor);
 
-            _loadedThumbnails = new Dictionary<int, Image>();
-            _searchResults = new List<SearchResult>();
-
-            _mutex = new Mutex();
+            _previewsLoader = new PreviewsLoader(_searcher);
+            _semaphore = new SemaphoreSlim(1, 1);
 
             InitializeComponents();
         }
@@ -85,6 +82,12 @@ namespace Yumu
             }
         }
 
+        protected override void OnClosed(EventArgs e)
+        {
+            base.OnClosed(e);
+            _previewsLoader.StopLoadingPreviews();
+        }
+
         protected override void OnKeyDown(object sender, KeyEventArgs e)
         {
             base.OnKeyDown(sender, e);
@@ -104,12 +107,8 @@ namespace Yumu
                 case Keys.Enter:
                     e.Handled = true;
                     e.SuppressKeyPress = true;
-                    if(!hasResults)
-                        break;
-                    SearchResult selection = _searchResults[_selectedIndex];
-                    selection.CopyToClipboard();
-                    selection.UpdateImageUsage();
-                    Close();
+                    if(HasResults)
+                        _searchResults[_selectedIndex].CopyToClipboard();
                     break;
 
                 case Keys.Back:
@@ -121,9 +120,7 @@ namespace Yumu
 
         private void SelectResult(int newIndex)
         {
-            if(!hasResults) return;
-            
-            if(newIndex >= 0 && newIndex < _searchResults.Count){
+            if(HasResults && newIndex >= 0 && newIndex < _searchResults.Count){
                 if(_selectedIndex < _searchResults.Count)
                     _searchResults[_selectedIndex].Selected = false;
                 
@@ -137,7 +134,7 @@ namespace Yumu
 
         private void ClearSearchResults()
         {
-            if(hasResults){
+            if(HasResults){
                 _resultPanel.Controls.Clear();
                 foreach(SearchResult item in _searchResults){
                     item.Dispose();
@@ -149,7 +146,6 @@ namespace Yumu
         private void BuildSearchResults()
         {
             List<DBImage> results = _searcher.Results;
-
             for(int i = 0; i < results.Count; i++){
                 _searchResults.Add(new SearchResult(this, results[i], i));
             }
@@ -164,56 +160,28 @@ namespace Yumu
         private void OnTextChange(object sender, EventArgs e)
         {
             _searcher.Search(_searchBar.Text);
-            
             if(!_searcher.AreNewResultsSame()) {
-                StopLoadingPreviews();
-                ClearSearchResults();
-                BuildSearchResults();
-                SelectResult(0);
-                StartLoadingPreviews();
+                BuildNewResults();
             }
         }
 
-        private async void StartLoadingPreviews()
+        private async void BuildNewResults()
         {
-            if(!_searcher.HasResults) return;
+            // Avoid collisions and iterating through modified
+            // lists when OnTextChange is called twice
+            // with a small time interval, which causes crash.
+            
+            _previewsLoader.StopLoadingPreviews();
 
-            _tokenSource = new CancellationTokenSource();
-            await Task.Run(() => LoadImagePreviews(_tokenSource.Token));
+            await _semaphore.WaitAsync();
 
-            foreach(SearchResult item in _searchResults){
-                item.AddImagePreview();
-            }
-        }
+            ClearSearchResults();
+            BuildSearchResults();
+            SelectResult(0);
 
-        private void StopLoadingPreviews()
-        {
-            if(_tokenSource != null) {
-                _tokenSource.Cancel();
-            }
-        }
+            await _previewsLoader.LoadImagePreviews(_searchResults);
 
-        private void LoadImagePreviews(CancellationToken token)
-        {
-            foreach(SearchResult result in _searchResults){
-                if(token.IsCancellationRequested){
-                    return;
-                }
-
-                int imgId = result.AttachedImage.Id;
-                _mutex.WaitOne();
-                if(_loadedThumbnails.ContainsKey(imgId)) {
-                    if(!result.HasPreview){
-                        result.AttachImagePreview(_loadedThumbnails[imgId]);
-                    }
-                } else {
-                    Image thumb = result.LoadImagePreview();
-                    if(thumb != null){
-                        _loadedThumbnails.Add(imgId, thumb);
-                    }
-                }
-                _mutex.ReleaseMutex();
-            }
+            _semaphore.Release();
         }
     }
 }

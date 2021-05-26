@@ -7,11 +7,9 @@ namespace Yumu
 {
     class SearchResult : ListItem
     {
-        private const int ROW_HEIGHT = 50;
+        public const int ROW_HEIGHT = 50;
         private const int SEPARATION = 10;
         private const int TITLE_OFFSET = 10;
-
-        private const int FILE_SIZE_LIMIT = 250000; // bytes
 
         private const int TITLE_LENGTH_LIMIT = 20;
 
@@ -85,9 +83,6 @@ namespace Yumu
         private void OnDoubleClick(object sender, EventArgs e)
         {
             CopyToClipboard();
-            UpdateImageUsage();
-            
-            _searchWindow.Close();
         }
 
         private void OnMouseDown(object sender, MouseEventArgs e)
@@ -116,90 +111,37 @@ namespace Yumu
             _searchWindow.SelectedIndex = _order;
         }
 
-        public Image LoadImagePreview()
-        {
-            if(!File.Exists(_imagePath))
-                return null;
-
-            FileInfo imgFile = new FileInfo(_imagePath);
-            if(imgFile.Length > FILE_SIZE_LIMIT)
-                return null;
-            
-            Image img = Image.FromFile(imgFile.FullName);
-            
-            // Get image thumbnail that stays in the boundaries of a square
-            // of size ROW_HEIGHT
-
-            float ratio = (float)Math.Max(img.Width, img.Height) / (float)ROW_HEIGHT;
-
-            int sizeX = Convert.ToInt32((float)img.Width / ratio);
-            int sizeY = Convert.ToInt32((float)img.Height / ratio);
-
-            (int posX, int posY) pos = AdaptedImageLocation(img, sizeX, sizeY);
-            int posX = pos.posX;
-            int posY = pos.posY;
-
-            Image.GetThumbnailImageAbort callback =
-                new Image.GetThumbnailImageAbort(() => true);
-            Image thumb = img.GetThumbnailImage(sizeX, sizeY, callback, IntPtr.Zero);
-            
-            CreatePreviewBox(thumb, posX, posY, sizeX, sizeY);
-
-            return thumb;
-        }
-
-        public void AttachImagePreview(Image thumb)
-        {
-            int sizeX = thumb.Width;
-            int sizeY = thumb.Height;
-            
-            (int posX, int posY) pos = AdaptedImageLocation(thumb, sizeX, sizeY);
-            int posX = pos.posX;
-            int posY = pos.posY;
-
-            CreatePreviewBox(thumb, posX, posY, sizeX, sizeY);
-        }
-
-        private static (int, int) AdaptedImageLocation(Image img, int sizeX, int sizeY)
+        public void AddImagePreview(Image thumb)
         {
             int posX = 0;
             int posY = 0;
-
-            if(img.Width > img.Height)
-                posY = (ROW_HEIGHT - sizeY) / 2;
-            else if(img.Width < img.Height)
-                posX = (ROW_HEIGHT - sizeX) / 2;
-
-            return (posX, posY);
-        }
-
-        private void CreatePreviewBox(Image thumb, int posX, int posY, int sizeX, int sizeY)
-        {
+            if(thumb.Width > thumb.Height)
+                posY = (ROW_HEIGHT - thumb.Height) / 2;
+            else if(thumb.Width < thumb.Height)
+                posX = (ROW_HEIGHT - thumb.Width) / 2;
+            
             _preview = new PictureBox(){
                 Image = thumb,
                 Location = new Point(posX, posY),
-                Size = new Size(sizeX, sizeY)
+                Size = new Size(thumb.Width, thumb.Height)
             };
 
             AddHoverOnElement(_preview);
             _preview.MouseDown += OnMouseDown;
             _preview.DoubleClick += OnDoubleClick;
             _preview.Cursor = Cursors.Hand;
-        }
-
-        public void AddImagePreview()
-        {
-            if(_preview != null)
-                Controls.Add(_preview);
+            
+            Controls.Add(_preview);
         }
 
         public void CopyToClipboard()
         {
-            if(File.Exists(_imagePath))
-                ImageUtils.CopyToClipboard(_imagePath);
+            ImageUtils.CopyToClipboard(_imagePath);
+            UpdateImageUsage();
+            _searchWindow.Close();
         }
 
-        public void UpdateImageUsage()
+        private void UpdateImageUsage()
         {
             if(!_imageWasUsed){
                 _imageWasUsed = true;

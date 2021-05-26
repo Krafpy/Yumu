@@ -11,7 +11,9 @@ namespace Yumu
     {
         public static void CopyToClipboard(string imagePath)
         {   
-            SetClipboardImage(Image.FromFile(imagePath), null, null);
+            if(File.Exists(imagePath)) {
+                SetClipboardImage(Image.FromFile(imagePath), null, null);
+            } 
         }
 
         // https://stackoverflow.com/questions/44177115/copying-from-and-to-clipboard-loses-image-transparency
