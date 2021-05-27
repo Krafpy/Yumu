@@ -26,7 +26,8 @@ namespace Yumu
 
         public Panel DirsPanel {get => _dirsPanel;}
 
-        public DBAccessor _accessor;
+        private DBAccessor _accessor;
+        public DBAccessor Accessor {get => _accessor;}
 
         public DirectoryManager() : base("Yumu directories", 500, 400)
         {

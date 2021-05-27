@@ -10,42 +10,43 @@ namespace Yumu
         public const int ROW_HEIGHT = 50;
         private const int SEPARATION = 10;
         private const int TITLE_OFFSET = 10;
-
         private const int TITLE_LENGTH_LIMIT = 20;
-
-        public DBImage AttachedImage;
+        
         private SearchWindow _searchWindow;
-        private int _order;
+        public DBImage AttachedImage;
 
         private PictureBox _preview;
-        public bool HasPreview {get => _preview != null;}
+        public bool HasPreview {
+            get => _preview != null;
+        }
 
-        private bool _imageWasUsed = false;
+        private string _imagePath;
+        private DBAccessor _accessor;
         
+        private bool _imageWasUsed = false;
+
         private bool _selected = false;
         public bool Selected {
             get => _selected;
             set {
                 _selected = value;
-                BackColor = _selected ? _hoverBackground : _defaultBackground;
+                if(_selected)
+                    ShowHover();
+                else
+                    HideHover();
             }
         }
 
-        private string _imagePath;
-
-        private Searcher _searcher;
-        private DBAccessor _accessor;
-
-        public SearchResult(SearchWindow searchWindow, DBImage attachedImage, int order) : base(searchWindow.ResultPanel)
+        public SearchResult(SearchWindow searchWindow, DBImage attachedImage, int order) 
+        : base(searchWindow.ResultPanel, order)
         {
             _searchWindow = searchWindow;
             AttachedImage = attachedImage;
-            _order = order;
 
-            _searcher = _searchWindow.Searcher;
-            _accessor = _searcher.Accessor;
+            Searcher searcher = _searchWindow.Searcher;
+            _accessor = searcher.Accessor;
 
-            _imagePath = _searcher.GetImageFullPath(AttachedImage);
+            _imagePath = searcher.GetImageFullPath(AttachedImage);
 
             InitializeComponents();
         }
