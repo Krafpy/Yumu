@@ -15,17 +15,16 @@ namespace Yumu
 
         private DirectoryManager _directoryManager;
         private DBDirectory _attachedDirectory;
-        private int _order;
 
         private DBAccessor _accessor;
 
-        public DirectoryControl(DirectoryManager directoryManager, DBDirectory dir, int order) : base(directoryManager.DirsPanel)
+        public DirectoryControl(DirectoryManager directoryManager, DBDirectory dir, int order) 
+        : base(directoryManager.DirsPanel, order)
         {
             _directoryManager = directoryManager;
             _attachedDirectory = dir;
-            _order = order;
 
-            _accessor = _directoryManager._accessor;
+            _accessor = _directoryManager.Accessor;
 
             InitializeComponents();
         }

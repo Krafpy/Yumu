@@ -91,7 +91,7 @@ namespace Yumu
         protected override void OnKeyDown(object sender, KeyEventArgs e)
         {
             base.OnKeyDown(sender, e);
-
+            
             switch(e.KeyCode)
             {
                 case Keys.Up:
@@ -107,15 +107,20 @@ namespace Yumu
                 case Keys.Enter:
                     e.Handled = true;
                     e.SuppressKeyPress = true;
-                    if(HasResults)
-                        _searchResults[_selectedIndex].CopyToClipboard();
+                    SelectionToClipboard();
                     break;
-
+                
                 case Keys.Back:
                     if(e.Control)
                         SendKeys.Send("^+{LEFT}{BACKSPACE}");
                     break;
             }
+        }
+
+        private void SelectionToClipboard()
+        {
+            if(HasResults)
+                _searchResults[_selectedIndex].CopyToClipboard();
         }
 
         private void SelectResult(int newIndex)
