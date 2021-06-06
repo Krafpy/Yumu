@@ -11,7 +11,7 @@ namespace Yumu
         private const int SEPARATION = 10;
         private const int TITLE_OFFSET = 10;
         private const int TITLE_LENGTH_LIMIT = 20;
-        private const int INDICATOR_OFFSET = 20;
+        private const int INDICATOR_OFFSET = 22;
         
         private SearchWindow _searchWindow;
         public DBImage AttachedImage;
