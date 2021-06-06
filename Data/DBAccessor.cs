@@ -74,7 +74,7 @@ namespace Yumu
         {
             for(int i = 0; i < _directories.Count; ++i) {
                 if(_directories[i].Id == dirId) {
-                    RemoveRefrencedImages(dirId);
+                    RemoveReferencedImages(dirId);
                     
                     _directories.RemoveAt(i);
                     _dirsIdMap.Remove(dirId);
@@ -85,7 +85,7 @@ namespace Yumu
             }
         }
 
-        private void RemoveRefrencedImages(int dirId)
+        private void RemoveReferencedImages(int dirId)
         {
             int dirImgCount = GetReferencedDirectory(dirId).ImageCount;
             int swapEnd = _images.Count - 1;
@@ -115,7 +115,7 @@ namespace Yumu
         {
             DBDirectory dir = GetReferencedDirectory(dirId); 
             if(dir != null) {
-                RemoveRefrencedImages(dirId);
+                RemoveReferencedImages(dirId);
                 List<DBImage> imgs = dir.LookupImageFiles();
                 AppendImageReferences(imgs);
 
