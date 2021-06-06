@@ -90,7 +90,7 @@ namespace Yumu
             if(imgFile.Length > FILE_SIZE_LIMIT)
                 return null;
             
-            Image img;// = Image.FromFile(imgFile.FullName);
+            Image img;
             using(Stream s = File.OpenRead(imgFile.FullName))
             {
                 img = Image.FromStream(s);
