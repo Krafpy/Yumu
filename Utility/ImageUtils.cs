@@ -12,8 +12,13 @@ namespace Yumu
         public static void CopyToClipboard(string imagePath)
         {   
             if(File.Exists(imagePath)) {
-                SetClipboardImage(Image.FromFile(imagePath), null, null);
-            } 
+                Image img;
+                using(Stream s = File.OpenRead(imagePath))
+                {
+                    img = Image.FromStream(s);
+                }
+                SetClipboardImage(img, null, null);
+            }
         }
 
         // https://stackoverflow.com/questions/44177115/copying-from-and-to-clipboard-loses-image-transparency
@@ -32,7 +37,7 @@ namespace Yumu
             if (imageNoTr == null)
                 imageNoTr = image;
             using (MemoryStream pngMemStream = new MemoryStream())
-            using (MemoryStream dibMemStream = new MemoryStream())
+            //using (MemoryStream dibMemStream = new MemoryStream())
             using (MemoryStream f17MemStream = new MemoryStream())
             {
                 // As standard bitmap, without transparency support
