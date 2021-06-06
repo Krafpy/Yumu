@@ -90,7 +90,11 @@ namespace Yumu
             if(imgFile.Length > FILE_SIZE_LIMIT)
                 return null;
             
-            Image img = Image.FromFile(imgFile.FullName);
+            Image img;// = Image.FromFile(imgFile.FullName);
+            using(Stream s = File.OpenRead(imgFile.FullName))
+            {
+                img = Image.FromStream(s);
+            }
             
             // Get image thumbnail that stays in the boundaries of a square
             // of size ROW_HEIGHT
