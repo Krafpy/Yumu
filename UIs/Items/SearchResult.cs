@@ -11,6 +11,7 @@ namespace Yumu
         private const int SEPARATION = 10;
         private const int TITLE_OFFSET = 10;
         private const int TITLE_LENGTH_LIMIT = 20;
+        private const int INDICATOR_OFFSET = 22;
         
         private SearchWindow _searchWindow;
         public DBImage AttachedImage;
@@ -72,13 +73,29 @@ namespace Yumu
                 AutoSize = true,
             };
             titleLab.Location = new Point(ROW_HEIGHT + TITLE_OFFSET, (ROW_HEIGHT - titleLab.Height) / 2);
+            Controls.Add(titleLab);
 
             AddHoverOnElement(titleLab);
             titleLab.MouseDown += OnMouseDown;
             titleLab.DoubleClick += OnDoubleClick;
             titleLab.Cursor = Cursors.Hand;
 
-            Controls.Add(titleLab);
+            string ext = Path.GetExtension(AttachedImage.FileName);
+            if(ext.ToLower() == ".gif"){
+                Label indicLab = new Label(){
+                    Text = "GIF",
+                    Font = new Font(Window.FONT_NAME, 10, FontStyle.Bold),
+                    AutoSize = false,
+                    ForeColor = Color.Gray,
+                };
+                indicLab.Location = new Point(Width - indicLab.PreferredWidth - INDICATOR_OFFSET, (ROW_HEIGHT - indicLab.Height) / 2);
+                Controls.Add(indicLab);
+
+                AddHoverOnElement(indicLab);
+                indicLab.MouseDown += OnMouseDown;
+                indicLab.DoubleClick += OnDoubleClick;
+                indicLab.Cursor = Cursors.Hand;
+            }
         }
 
         private void OnDoubleClick(object sender, EventArgs e)
