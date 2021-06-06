@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 namespace Yumu
 {
@@ -116,20 +117,17 @@ namespace Yumu
             DBDirectory dir = GetReferencedDirectory(dirId); 
             if(dir != null) {
                 // Keep the image usage of already referenced images
-                /*Dictionary<string, DBImage> curImgs = _images
-                .Where(img => img.DirId == dir.Id)
-                .ToDictionary(img => img.SearchName);
-
-                List<DBImage> newImgs = dir.LookupImageFiles();
-
-                foreach(DBImage img in newImgs){
-                    if(curImgs.ContainsKey(img.SearchName)){
-                        img.Usage = curImgs[img.SearchName].Usage;
-                    }
-                }*/
-                List<DBImage> newImgs = dir.LookupImageFiles();
+                Dictionary<string, DBImage> curImgs = _images
+                .Where(img => img.DirId == dirId)
+                .ToDictionary(img => img.FileName);
 
                 RemoveReferencedImages(dirId);
+                List<DBImage> newImgs = dir.LookupImageFiles();
+                foreach(DBImage img in newImgs){
+                    if(curImgs.ContainsKey(img.FileName)){
+                        img.Usage = curImgs[img.FileName].Usage;
+                    }
+                }
                 AppendImageReferences(newImgs);
 
                 DB.UpdateContent<DBDirectory>(_directories.ToArray(), 
