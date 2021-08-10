@@ -36,15 +36,20 @@ namespace Yumu
                 data = new DataObject();
             if (imageNoTr == null)
                 imageNoTr = image;
-            using (MemoryStream pngMemStream = new MemoryStream())
+            
+            if(image.RawFormat == ImageFormat.Png) {
+                using (MemoryStream pngMemStream = new MemoryStream()) {
+                    // As PNG. Gimp/Open Office will prefer this over the other two.
+                    image.Save(pngMemStream, ImageFormat.Png);
+                    data.SetData("PNG", false, pngMemStream);
+                }
+            }
+            
             //using (MemoryStream dibMemStream = new MemoryStream())
-            using (MemoryStream f17MemStream = new MemoryStream())
+            using (MemoryStream dibV5MemStream = new MemoryStream())
             {
                 // As standard bitmap, without transparency support
                 data.SetData(DataFormats.Bitmap, true, imageNoTr);
-                // As PNG. Gimp/Open Office will prefer this over the other two.
-                image.Save(pngMemStream, ImageFormat.Png);
-                data.SetData("PNG", false, pngMemStream);
                 
                 // As DIB. This is (wrongly) accepted as ARGB by many applications.
                 /*Byte[] dibData = ConvertToDib(image);
@@ -53,8 +58,8 @@ namespace Yumu
 
                 // As a DIBv5 (Format17)
                 Byte[] dibV5Data = ConvertToDIBv5(image);
-                f17MemStream.Write(dibV5Data, 0, dibV5Data.Length);
-                data.SetData(DataFormats.Dib, false, f17MemStream);
+                dibV5MemStream.Write(dibV5Data, 0, dibV5Data.Length);
+                data.SetData(DataFormats.Dib, false, dibV5MemStream);
                 // The 'copy=true' argument means the MemoryStreams can be safely disposed after the operation.
                 Clipboard.SetDataObject(data, true);
             }
