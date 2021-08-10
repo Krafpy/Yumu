@@ -12,6 +12,9 @@ namespace Yumu
         static void Main(string[] args)
         {
             if(AppIsAlreadyRunning()) {
+                string msg = "An instance of Yumu is already running in the background.";
+                string caption = "Error Already runnin.";
+                MessageBox.Show(msg, caption, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
